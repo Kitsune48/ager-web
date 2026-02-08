@@ -1,4 +1,3 @@
-import { API_BASE } from "@/lib/api/client";
 import type {
   UserProfileDto,
   UpdateMyProfileRequest,
@@ -55,7 +54,7 @@ async function authFetch(input: string, init: RequestInit, accessToken: string) 
 }
 
 export async function getMe(accessToken: string): Promise<UserProfileDto> {
-  const res = await authFetch(`${API_BASE}/api/me`, { method: "GET" }, accessToken);
+  const res = await authFetch(`/api/me`, { method: "GET" }, accessToken);
 
   if (!res.ok) {
     const err = await parseResultError(res);
@@ -70,7 +69,7 @@ export async function patchMe(
   accessToken: string
 ): Promise<UserProfileDto> {
   const res = await authFetch(
-    `${API_BASE}/api/me`,
+    `/api/me`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -92,7 +91,7 @@ export async function changeMyPassword(
   accessToken: string
 ): Promise<void> {
   const res = await authFetch(
-    `${API_BASE}/api/me/change-password`,
+    `/api/me/change-password`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -109,7 +108,7 @@ export async function changeMyPassword(
 
 export async function deleteMe(accessToken: string): Promise<void> {
   const res = await authFetch(
-    `${API_BASE}/api/me`,
+    `/api/me`,
     { method: "DELETE" },
     accessToken
   );

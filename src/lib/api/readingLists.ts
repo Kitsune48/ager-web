@@ -1,5 +1,4 @@
 // src/lib/api/readingLists.ts
-import { API_BASE } from "./client";
 import type {
   ReadingList,
   ReadingListItem,
@@ -37,13 +36,12 @@ export async function createReadingList(
   body: CreateReadingListPayload,
   accessToken: string
 ): Promise<{ id: number }> {
-  const res = await fetch(`${API_BASE}/api/reading-lists`, {
+  const res = await fetch(`/api/reading-lists`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...authHeaders(accessToken),
     },
-    credentials: "include",
     body: JSON.stringify(body),
   });
 
@@ -61,12 +59,11 @@ export async function deleteReadingList(
   readingListId: number,
   accessToken: string
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/reading-lists/${readingListId}`, {
+  const res = await fetch(`/api/reading-lists/${readingListId}`, {
     method: "DELETE",
     headers: {
       ...authHeaders(accessToken),
     },
-    credentials: "include",
   });
 
   if (!res.ok && res.status !== 204) {
@@ -90,14 +87,13 @@ export async function getMyReadingListsPage(
   if (cursor) params.set("cursor", cursor);
 
   const res = await fetch(
-    `${API_BASE}/api/reading-lists/mine?${params.toString()}`,
+    `/api/reading-lists/mine?${params.toString()}`,
     {
       method: "GET",
       headers: {
         Accept: "application/json",
         ...authHeaders(accessToken),
       },
-      credentials: "include",
     }
   );
 
@@ -129,14 +125,13 @@ export async function addItemToReadingList(
   accessToken: string
 ): Promise<void> {
   const res = await fetch(
-    `${API_BASE}/api/reading-lists/${readingListId}/items`,
+    `/api/reading-lists/${readingListId}/items`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...authHeaders(accessToken),
       },
-      credentials: "include",
       body: JSON.stringify(body),
     }
   );
@@ -163,11 +158,10 @@ export async function removeItemFromReadingList(
   };
 
   const res = await fetch(
-    `${API_BASE}/api/reading-lists/${readingListId}/items/${articleId}`,
+    `/api/reading-lists/${readingListId}/items/${articleId}`,
     {
       method: "DELETE",
       headers,
-      credentials: "include",
     }
   );
 
@@ -195,14 +189,13 @@ export async function getReadingListItemsPage(
   if (cursor) params.set("cursor", cursor);
 
   const res = await fetch(
-    `${API_BASE}/api/reading-lists/${readingListId}/items?${params.toString()}`,
+    `/api/reading-lists/${readingListId}/items?${params.toString()}`,
     {
       method: "GET",
       headers: {
         Accept: "application/json",
         ...authHeaders(accessToken),
       },
-      credentials: "include",
     }
   );
 
@@ -229,7 +222,7 @@ export async function getPublicReadingList(
   slug: string
 ): Promise<ReadingList> {
   const res = await fetch(
-    `${API_BASE}/api/reading-lists/public/users/${ownerUserId}/${encodeURIComponent(
+    `/api/reading-lists/public/users/${ownerUserId}/${encodeURIComponent(
       slug
     )}`,
     {
@@ -262,7 +255,7 @@ export async function getPublicReadingListItemsPage(
   if (cursor) params.set("cursor", cursor);
 
   const res = await fetch(
-    `${API_BASE}/api/reading-lists/public/${readingListId}/items?${params.toString()}`,
+    `/api/reading-lists/public/${readingListId}/items?${params.toString()}`,
     {
       method: "GET",
       headers: { Accept: "application/json" },

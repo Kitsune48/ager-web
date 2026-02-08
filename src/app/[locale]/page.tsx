@@ -1,15 +1,306 @@
-"use client";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 
-import { useTranslations } from "next-intl";
+type SocialLink = {
+  name: string;
+  href: string;
+  description: string;
+};
 
-export default function Home() {
-  const tApp = useTranslations("app");   // namespace = "app"
+export default async function Home({
+  params
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const isIt = locale === "it";
+
+  const socialLinks: SocialLink[] = [
+    {
+      name: "X",
+      href: "https://x.com/CultureAger",
+      description: isIt
+        ? "Informazioni rapide su come procede il lavoro in Ager."
+        : "Quick updates on how Ager is progressing."
+    },
+    {
+      name: "Instagram",
+      href: "https://www.instagram.com/cultureager/",
+      description: isIt
+        ? "Contenuti visual, infografiche e anteprime del nostro lavoro."
+        : "Visual content, infographics and previews of what we’re building."
+    },
+    {
+      name: "WhatsApp (Form)",
+      href: "https://forms.gle/cGZ94Xw15YqXwVET8",
+      description: isIt
+        ? "Per dare un contributo concreto alla startup."
+        : "Want to contribute? Fill out the form and join in."
+    },
+    {
+      name: "TikTok",
+      href: "https://www.tiktok.com/@agerculture",
+      description: isIt
+        ? "Contenuti più leggeri sul nostro percorso come startup."
+        : "Lighter content about our journey as a startup."
+    },
+    {
+      name: "Discord",
+      href: "https://discord.gg/daS7J6Q4",
+      description: isIt
+        ? "Per i veri nerd che vogliono aiutarci a costruire Ager dal lato tecnico."
+        : "For builders who want to help on the technical side."
+    },
+    {
+      name: "Substack",
+      href: "https://substack.com/@agerculture?utm_campaign=profile&utm_medium=profile-page",
+      description: isIt
+        ? "Segui il progetto e ricevi aggiornamenti in formato newsletter."
+        : "Follow the project and get updates via newsletter."
+    }
+  ];
+
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-3xl font-bold">{tApp("title")}</h1>
-      <p className="text-muted-foreground mt-2">
-        Welcome! We'll build the Feed next.
-      </p>
+    <main className="min-h-dvh bg-background text-foreground">
+      <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <Link href={`/${locale}`} className="text-lg font-semibold tracking-tight">
+            Ager
+          </Link>
+
+          <nav className="hidden items-center gap-6 text-sm sm:flex">
+            <a href="#values" className="text-muted-foreground hover:text-foreground">
+              {isIt ? "Valori" : "Values"}
+            </a>
+            <a href="#social" className="text-muted-foreground hover:text-foreground">
+              {isIt ? "Dove trovarci" : "Where to find us"}
+            </a>
+            <a href="#join" className="text-muted-foreground hover:text-foreground">
+              {isIt ? "Unisciti" : "Join"}
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" className="hidden sm:inline-flex">
+              <a href="#social">{isIt ? "Scopri di più" : "Learn more"}</a>
+            </Button>
+            <Button asChild>
+              <a
+                href="https://forms.gle/cGZ94Xw15YqXwVET8"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {isIt ? "Unisciti" : "Join"}
+              </a>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
+        <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+          <div className="space-y-5 lg:col-span-7">
+            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+              {isIt ? "Notizie vere. Idee chiare." : "Real news. Clear ideas."}
+            </h1>
+            <p className="text-muted-foreground text-base sm:text-lg">
+              {isIt
+                ? "Qui per cambiare il mondo dell'informazione, pronti a creare il tuo nuovo punto di riferimento per capire il mondo."
+                : "We’re here to rethink how you navigate information and build a new reference point for understanding the world."}
+            </p>
+            <p className="text-muted-foreground text-base sm:text-lg">
+              {isIt
+                ? "Non siamo un giornale: diamo ordine a quelli che già esistono."
+                : "We’re not a newspaper: we bring order to what already exists."}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <a href="#social">{isIt ? "Scopri di più" : "Learn more"}</a>
+              </Button>
+              <Button asChild size="lg" variant="secondary">
+                <a
+                  href="https://forms.gle/cGZ94Xw15YqXwVET8"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {isIt ? "Scopri come puoi aiutarci" : "See how you can help"}
+                </a>
+              </Button>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5">
+            <Card>
+              <CardHeader>
+                <CardTitle>{isIt ? "Su cosa si fonda Ager" : "What Ager is built on"}</CardTitle>
+                <CardDescription>
+                  {isIt
+                    ? "Una visione semplice: meno rumore, più comprensione."
+                    : "A simple vision: less noise, more understanding."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-sm">
+                  <span className="font-medium">{isIt ? "Focus:" : "Focus:"}</span>{" "}
+                  <span className="text-muted-foreground">
+                    {isIt
+                      ? "cultura (vera) degli utenti e un modo nuovo di concepire le notizie."
+                      : "real user understanding and a new way to approach news."}
+                  </span>
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">{isIt ? "Approccio:" : "Approach:"}</span>{" "}
+                  <span className="text-muted-foreground">
+                    {isIt
+                      ? "unire gli aspetti migliori dei social e dei feed di notizie."
+                      : "combine the best parts of social and news feeds."}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section id="values" className="border-t bg-muted/20">
+        <div className="mx-auto max-w-6xl px-6 py-14 sm:py-16">
+          <div className="mb-8 space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {isIt ? "Su cosa si fonda Ager" : "Our values"}
+            </h2>
+            <p className="text-muted-foreground">
+              {isIt
+                ? "Tre pilastri per rendere l'informazione più utile."
+                : "Three pillars to make information more useful."}
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>{isIt ? "Niente più caos" : "No more chaos"}</CardTitle>
+                <CardDescription>
+                  {isIt
+                    ? "Un modo nuovo di concepire le notizie."
+                    : "A new way to approach the news."}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>{isIt ? "Attenzione all'utente" : "User-first"}</CardTitle>
+                <CardDescription>
+                  {isIt
+                    ? "L'obiettivo finale è la cultura (vera) degli utenti."
+                    : "The end goal is real understanding for users."}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>{isIt ? "Social + feed di notizie" : "Social + news feed"}</CardTitle>
+                <CardDescription>
+                  {isIt
+                    ? "Gli aspetti migliori dei social e del mondo delle notizie in un solo posto."
+                    : "The best parts of social and news in one place."}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section id="social" className="border-t">
+        <div className="mx-auto max-w-6xl px-6 py-14 sm:py-16">
+          <div className="mb-8 space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {isIt ? "Seguici sui social" : "Follow us"}
+            </h2>
+            <p className="text-muted-foreground">
+              {isIt
+                ? "Resta aggiornato, scopri cosa stiamo creando e partecipa alle conversazioni."
+                : "Stay updated, see what we’re building, and join the conversation."}
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {socialLinks.map((s) => (
+              <Card key={s.href} className="transition-colors hover:bg-muted/30">
+                <CardHeader>
+                  <CardTitle>{s.name}</CardTitle>
+                  <CardDescription>{s.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild variant="outline" className="w-full">
+                    <a href={s.href} target="_blank" rel="noreferrer">
+                      {isIt ? "Apri" : "Open"}
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="join" className="border-t bg-muted/20">
+        <div className="mx-auto max-w-6xl px-6 py-14 sm:py-16">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold tracking-tight">
+                {isIt
+                  ? "Unisciti alla rivoluzione dell’informazione"
+                  : "Join the information revolution"}
+              </h2>
+              <p className="text-muted-foreground">
+                {isIt
+                  ? "Se vuoi aiutarci a costruire Ager, partiamo da qui."
+                  : "If you want to help build Ager, start here."}
+              </p>
+            </div>
+            <Button asChild size="lg">
+              <a
+                href="https://forms.gle/cGZ94Xw15YqXwVET8"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {isIt ? "Scopri come puoi aiutarci" : "See how you can help"}
+              </a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t">
+        <div className="mx-auto max-w-6xl px-6 py-10">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-base font-semibold">Ager</div>
+              <div className="text-muted-foreground text-sm">
+                {isIt
+                  ? "Il futuro dell'informazione parte da qui."
+                  : "The future of information starts here."}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 text-sm sm:items-end">
+              <div className="text-muted-foreground">© 2025 Ager — Tutti i diritti riservati</div>
+              <div className="text-muted-foreground">
+                <a className="hover:text-foreground" href="mailto:ager.org@gmail.com">
+                  {isIt ? "Contatti" : "Contact"}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

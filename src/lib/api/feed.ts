@@ -1,4 +1,4 @@
-import { apiFetch } from "./client";
+import { appFetch } from "./client";
 import type { FeedPage, Cursor } from "./types";
 
 export async function fetchFeedPage(
@@ -15,7 +15,7 @@ export async function fetchFeedPage(
   if (topic && topic !== "all") search.set("topic", topic); // future use
 
   const qs = search.toString();
-  return apiFetch<FeedPage>(`/api/feed${qs ? `?${qs}` : ""}`, {
+  return appFetch<FeedPage>(`/api/feed${qs ? `?${qs}` : ""}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined
   });
 }

@@ -11,8 +11,13 @@ type FetchOptions = {
   next?: NextFetchRequestConfig; // to want to pass { revalidate: ... } 
 };
 
-export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
-  const url = `${API_BASE}${path}`;
+function buildUrl(baseUrl: string, path: string) {
+  if (!baseUrl) return path;
+  return `${baseUrl}${path}`;
+}
+
+async function doFetch<T>(baseUrl: string, path: string, opts: FetchOptions = {}): Promise<T> {
+  const url = buildUrl(baseUrl, path);
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(opts.headers ?? {}),
@@ -38,4 +43,14 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
   }
 
   return (await res.json()) as T;
+}
+
+// Calls the backend directly (cross-origin in production)
+export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
+  return doFetch<T>(API_BASE, path, opts);
+}
+
+// Calls this Next.js app origin (same-origin) – useful for route handlers that proxy to the backend
+export async function appFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
+  return doFetch<T>("", path, opts);
 }

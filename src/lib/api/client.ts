@@ -6,6 +6,7 @@ type FetchOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: any;
   signal?: AbortSignal;
+  credentials?: RequestCredentials;
   cache?: RequestCache;          // allow Next.js cache hints like "no-store"
   next?: NextFetchRequestConfig; // to want to pass { revalidate: ... } 
 };
@@ -22,7 +23,7 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
     headers,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
     signal: opts.signal,
-    credentials: "include",
+    credentials: opts.credentials ?? "omit",
     cache: opts.cache,
     next: opts.next,
   });

@@ -1,15 +1,10 @@
-"use client";
-
-import FeedTabs from "@/features/feed/components/FeedTabs";
-import TopicChips from "@/features/feed/components/TopicChips";
-import FeedList from "@/features/feed/components/FeedList";
+import { Suspense } from "react";
+import FeedPageClient from "./FeedPageClient";
 
 export default function FeedPage() {
   return (
-    <div className="mx-auto w-full max-w-3xl px-3 py-4 sm:px-0">
-      <FeedTabs />
-      <TopicChips />
-      <FeedList />
-    </div>
+    <Suspense fallback={null}>
+      <FeedPageClient />
+    </Suspense>
   );
 }

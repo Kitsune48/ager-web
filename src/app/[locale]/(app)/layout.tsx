@@ -2,6 +2,7 @@ import AppHeader from "@/components/layout/AppHeader";
 import AppSidebar from "@/components/layout/AppSidebar";
 import MobileTabBar from "@/components/layout/MobileTabBar";
 import RequireAuth from "@/components/auth/RequireAuth";
+import { Suspense } from "react";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +13,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         role="banner"
       >
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
-          <AppHeader />
+          <Suspense fallback={null}>
+            <AppHeader />
+          </Suspense>
         </div>
       </header>
 

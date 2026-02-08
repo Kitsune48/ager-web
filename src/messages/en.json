@@ -1,0 +1,10 @@
+{
+  "app": { "title": "Ager" },
+  "nav": { "feed": "Feed", "lists": "Lists", "profile": "Profile" },
+  "action": { "save": "Save", "like": "Like", "hide": "Hide" },
+  "empty": { "noResults": "Nothing to see here yet" },
+  "feed": {
+    "tabs": { "latest": "Latest", "top": "Top", "following": "Following" },
+    "topics": { "all": "All", "tech": "Tech", "business": "Business", "design": "Design", "ai": "AI" }
+  }
+}

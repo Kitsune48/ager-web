@@ -1,0 +1,10 @@
+{
+  "app": { "title": "Ager" },
+  "nav": { "feed": "Feed", "lists": "Liste", "profile": "Profilo" },
+  "action": { "save": "Salva", "like": "Mi piace", "hide": "Nascondi" },
+  "empty": { "noResults": "Non c'è ancora nulla da vedere" },
+  "feed": {
+    "tabs": { "latest": "Ultimi", "top": "Top", "following": "Seguiti" },
+    "topics": { "all": "Tutti", "tech": "Tecnologia", "business": "Business", "design": "Design", "ai": "AI" }
+  }
+}

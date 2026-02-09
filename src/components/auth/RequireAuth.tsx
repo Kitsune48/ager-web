@@ -5,19 +5,21 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 export default function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { accessToken } = useSession();
+  const { ready, accessToken } = useSession();
   const router = useRouter();
   const { locale } = (useParams() as { locale: string });
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // On first mount, decide immediately
+    if (!ready) return;
+
     if (!accessToken) {
       router.replace(`/${locale}/login`);
-    } else {
-      setChecked(true);
+      return;
     }
-  }, [accessToken, locale, router]);
+
+    setChecked(true);
+  }, [ready, accessToken, locale, router]);
 
   // Prevent UI flash while deciding
   if (!checked) return null;

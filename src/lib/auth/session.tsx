@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState, useCallback } from "react";
+import { createContext, useContext, useMemo, useState, useCallback, useEffect } from "react";
 import { ApiError } from "@/lib/api/errors";
 import {
   login as apiLogin,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/api/auth";
 
 type SessionState = {
+  ready: boolean;
   userId: number | null;
   accessToken: string | null;
   accessTokenExpiresAt: string | null;
@@ -22,7 +23,7 @@ type AuthActions = {
   login: (payload: { email: string; password?: string | null; otpCode?: string | null }) => Promise<void>;
   requestRegisterOtp: (payload: { username: string; email: string }) => Promise<void>;
   register: (payload: { username: string; email: string; otpCode: string; password?: string | null }) => Promise<void>;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<string | null>;
   logout: () => Promise<void>;
 };
 
@@ -30,7 +31,25 @@ const SessionCtx = createContext<SessionState | null>(null);
 const ActionsCtx = createContext<AuthActions | null>(null);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<SessionState>({ userId: null, accessToken: null, accessTokenExpiresAt: null });
+  const [state, setState] = useState<SessionState>({ ready: false, userId: null, accessToken: null, accessTokenExpiresAt: null });
+
+  // On full page reload, SessionProvider state resets. We re-hydrate via refresh cookie.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await apiRefresh();
+        if (cancelled) return;
+        setState({ ready: true, userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
+      } catch {
+        if (cancelled) return;
+        setState({ ready: true, userId: null, accessToken: null, accessTokenExpiresAt: null });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const requestLoginOtp = useCallback(async (email: string) => {
     await apiRequestLoginOtp(email);
@@ -44,7 +63,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
 
     const data = await apiLogin(payload);
-    setState({ userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
+    setState({ ready: true, userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
   }, []);
 
   const requestRegisterOtp = useCallback(async (payload: { username: string; email: string }) => {
@@ -53,17 +72,18 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const register = useCallback(async (payload: { username: string; email: string; otpCode: string; password?: string | null }) => {
     const data = await apiRegisterWithOtp(payload.username, payload.email, payload.otpCode, payload.password);
-    setState({ userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
+    setState({ ready: true, userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
   }, []);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<string | null> => {
     const data = await apiRefresh();
-    setState({ userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
+    setState({ ready: true, userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
+    return data.accessToken ?? null;
   }, []);
 
   const logout = useCallback(async () => {
     await apiLogout(state.accessToken);
-    setState({ userId: null, accessToken: null, accessTokenExpiresAt: null });
+    setState({ ready: true, userId: null, accessToken: null, accessTokenExpiresAt: null });
   }, [state.accessToken]);
 
   const actions = useMemo<AuthActions>(

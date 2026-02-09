@@ -11,8 +11,8 @@ export function useAuthedFetch() {
 
     // Try one refresh
     try {
-      await refresh();
-      const res2 = await fetch(input, withAuth(init, accessToken));
+      const newToken = await refresh();
+      const res2 = await fetch(input, withAuth(init, newToken ?? accessToken));
       if (res2.status === 401) await logout();
       return res2;
     } catch {

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArticlePublic } from "@/lib/api/articles";
-import { Button } from "@/components/ui/button";
+import ArticleActions from "./ArticleActions";
 
 export default async function ArticleDetailPage({
   params,
@@ -21,6 +21,20 @@ export default async function ArticleDetailPage({
   }
 
   const href = article.canonicalUrl ?? article.url;
+  const rawLang = (article.lang ?? "").trim();
+  const primaryLang = rawLang ? rawLang.split(/[-_]/)[0].toLowerCase() : "";
+  const languageLabel =
+    primaryLang === "it"
+      ? locale === "it"
+        ? "Italiano"
+        : "Italian"
+      : primaryLang === "en"
+        ? locale === "it"
+          ? "Inglese"
+          : "English"
+        : rawLang
+          ? rawLang.toUpperCase()
+          : null;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6">
@@ -38,6 +52,15 @@ export default async function ArticleDetailPage({
           <>
             {article.sourceName && <span>•</span>}
             <span>{new Date(article.publishedAt).toLocaleString(locale)}</span>
+          </>
+        )}
+
+        {languageLabel && (
+          <>
+            {(article.sourceName || article.publishedAt) && <span>•</span>}
+            <span>
+              {locale === "it" ? "Lingua" : "Language"}: {languageLabel}
+            </span>
           </>
         )}
       </div>
@@ -58,19 +81,7 @@ export default async function ArticleDetailPage({
         <p className="mt-4 text-sm text-muted-foreground">{article.excerpt}</p>
       )}
 
-      <div className="mt-6 flex gap-2">
-        <Button asChild>
-          <a href={href} target="_blank" rel="noreferrer">
-            {locale === "it" ? "Apri articolo" : "Open article"}
-          </a>
-        </Button>
-
-        <Button asChild variant="outline">
-          <a href={href} target="_blank" rel="noreferrer">
-            {locale === "it" ? "Copia link" : "Copy link"}
-          </a>
-        </Button>
-      </div>
+      <ArticleActions locale={locale} href={href} />
     </div>
   );
 }

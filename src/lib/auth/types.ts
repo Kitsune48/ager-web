@@ -16,6 +16,10 @@ export type RequestLoginOtpCodeRequest = {
   email: string;
 };
 
+export type RequestForgotPasswordOtpCodeRequest = {
+  email: string;
+};
+
 export type RegisterRequest = {
   username: string;
   email: string;
@@ -30,6 +34,12 @@ export type RequestRegisterOtpCodeRequest = {
 
 export type RefreshTokenRequest = {
   refreshToken: string;
+};
+
+export type ResetForgotPasswordRequest = {
+  email: string;
+  otpCode: string;
+  newPassword: string;
 };
 
 export type LogoutRequest = {

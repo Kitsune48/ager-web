@@ -3,8 +3,10 @@ import type {
   AuthResultDto,
   LoginRequest,
   RegisterRequest,
+  RequestForgotPasswordOtpCodeRequest,
   RequestLoginOtpCodeRequest,
   RequestRegisterOtpCodeRequest,
+  ResetForgotPasswordRequest,
 } from "@/lib/auth/types";
 
 export type { LoginRequest, RegisterRequest, AuthResultDto };
@@ -43,6 +45,20 @@ export async function loginWithPassword(email: string, password: string): Promis
 
 export async function requestRegisterOtp(username: string, email: string): Promise<void> {
   await postNoContent("/api/auth/register/request-code", { username, email } satisfies RequestRegisterOtpCodeRequest);
+}
+
+export async function requestPasswordResetOtp(email: string): Promise<void> {
+  await postNoContent(
+    "/api/auth/forgot-password/request-code",
+    { email } satisfies RequestForgotPasswordOtpCodeRequest
+  );
+}
+
+export async function resetPassword(email: string, otpCode: string, newPassword: string): Promise<void> {
+  await postNoContent(
+    "/api/auth/forgot-password/reset",
+    { email, otpCode, newPassword } satisfies ResetForgotPasswordRequest
+  );
 }
 
 export async function registerWithOtp(

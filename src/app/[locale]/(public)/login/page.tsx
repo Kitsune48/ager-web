@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { z } from "zod";
 import { useAuthActions } from "@/lib/auth/session";
 import { useRouter, useParams } from "next/navigation";
@@ -17,7 +18,12 @@ const REQUEST_SCHEMA = z.object({
 const VERIFY_SCHEMA = z.object({
   otpCode: z
     .string()
-    .regex(/^\d{6}$/, "OTP must be 6 digits"),
+    .regex(/^\d{6}$/),
+});
+
+const PASSWORD_SCHEMA = z.object({
+  email: z.email().max(254),
+  password: z.string().min(1).max(256),
 });
 
 const RESEND_COOLDOWN_MS = 30_000;
@@ -32,9 +38,11 @@ export default function LoginPage() {
   const [pending, setPending] = useState(false);
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [restoreEmail, setRestoreEmail] = useState<string>("");
+  const [method, setMethod] = useState<"otp" | "password">("otp");
   const [step, setStep] = useState<"request" | "verify">("request");
   const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
+  const [password, setPassword] = useState("");
   const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
 
@@ -51,14 +59,24 @@ export default function LoginPage() {
 
   const canResend = step === "verify" && resendSecondsLeft === 0;
 
-  async function onRequestCode(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function resetOtpFlow() {
+    setStep("request");
+    setOtpCode("");
+    setResendAvailableAt(null);
+  }
+
+  function resetMessages() {
     setErrors(null);
     setInfo(null);
+  }
+
+  async function onRequestCode(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    resetMessages();
 
     const parsed = REQUEST_SCHEMA.safeParse({ email });
     if (!parsed.success) {
-      setErrors(parsed.error.issues[0]?.message ?? (isIt ? "Controlla i dati inseriti." : "Please check your input."));
+      setErrors(isIt ? "Inserisci una email valida." : "Enter a valid email.");
       return;
     }
 
@@ -86,11 +104,11 @@ export default function LoginPage() {
 
   async function onVerify(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setErrors(null);
+    resetMessages();
 
     const parsed = VERIFY_SCHEMA.safeParse({ otpCode });
     if (!parsed.success) {
-      setErrors(parsed.error.issues[0]?.message ?? (isIt ? "Controlla il codice." : "Please check the code."));
+      setErrors(isIt ? "Inserisci un codice di 6 cifre." : "Enter a 6-digit code.");
       return;
     }
 
@@ -129,8 +147,7 @@ export default function LoginPage() {
   }
 
   async function onResend() {
-    setErrors(null);
-    setInfo(null);
+    resetMessages();
     setPending(true);
     try {
       await requestLoginOtp(email);
@@ -152,10 +169,102 @@ export default function LoginPage() {
     }
   }
 
+  async function onPasswordLogin(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    resetMessages();
+
+    const parsed = PASSWORD_SCHEMA.safeParse({ email, password });
+    if (!parsed.success) {
+      // keep it simple & localized
+      if (!email.trim()) setErrors(isIt ? "Inserisci la tua email." : "Enter your email.");
+      else if (!password.trim()) setErrors(isIt ? "Inserisci la password." : "Enter your password.");
+      else setErrors(isIt ? "Controlla i dati inseriti." : "Please check your input.");
+      return;
+    }
+
+    setPending(true);
+    try {
+      await login({ email: parsed.data.email, password: parsed.data.password });
+      router.push(`/${locale}/feed`);
+    } catch (e: unknown) {
+      const err = e as ApiError;
+
+      if (err?.status === 401) {
+        setErrors(isIt ? "Credenziali non valide." : "Invalid credentials.");
+      } else if (err?.status === 403) {
+        setErrors(isIt ? "Account disabilitato/eliminato." : "Account disabled/deleted.");
+
+        if (err?.code === "account_deleted") {
+          setRestoreEmail(email);
+          toast(isIt ? "Account eliminato" : "Account deleted", {
+            description: isIt
+              ? "Questo account è stato eliminato. Vuoi ripristinarlo?"
+              : "This account was deleted. Do you want to restore it?",
+            action: {
+              label: isIt ? "Ripristina" : "Restore",
+              onClick: () => setRestoreOpen(true),
+            },
+          });
+        }
+      } else if (err?.status === 404) {
+        setErrors(isIt ? "Account non trovato." : "Account not found.");
+      } else {
+        setErrors(err?.message ?? (isIt ? "Impossibile effettuare il login." : "Unable to sign in."));
+      }
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <main className="mx-auto max-w-sm p-6">
-      <h1 className="mb-4 text-2xl font-bold">Sign in</h1>
-      {step === "request" ? (
+      <h1 className="mb-4 text-2xl font-bold">{isIt ? "Accedi" : "Sign in"}</h1>
+
+      {method === "password" ? (
+        <form onSubmit={onPasswordLogin} className="space-y-3">
+          <div>
+            <label className="mb-1 block text-sm">Email</label>
+            <Input
+              name="email"
+              type="email"
+              required
+              maxLength={254}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={pending}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm">{isIt ? "Password" : "Password"}</label>
+            <Input
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={pending}
+            />
+          </div>
+          {info && <p className="text-sm text-muted-foreground">{info}</p>}
+          {errors && <p className="text-sm text-destructive">{errors}</p>}
+          <Button type="submit" disabled={pending}>
+            {pending ? (isIt ? "Accesso..." : "Signing in...") : (isIt ? "Accedi" : "Sign in")}
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={pending}
+            onClick={() => {
+              setMethod("otp");
+              resetMessages();
+              resetOtpFlow();
+            }}
+          >
+            {isIt ? "Accedi con codice invece" : "Use code instead"}
+          </Button>
+        </form>
+      ) : step === "request" ? (
         <form onSubmit={onRequestCode} className="space-y-3">
           <div>
             <label className="mb-1 block text-sm">Email</label>
@@ -173,6 +282,19 @@ export default function LoginPage() {
           {errors && <p className="text-sm text-destructive">{errors}</p>}
           <Button type="submit" disabled={pending}>
             {pending ? (isIt ? "Invio..." : "Sending...") : (isIt ? "Richiedi codice" : "Request code")}
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={pending}
+            onClick={() => {
+              setMethod("password");
+              resetMessages();
+              resetOtpFlow();
+            }}
+          >
+            {isIt ? "Accedi con password invece" : "Sign in with password instead"}
           </Button>
         </form>
       ) : (
@@ -203,22 +325,40 @@ export default function LoginPage() {
               {isIt ? "Invia di nuovo" : "Resend"}{resendSecondsLeft > 0 ? ` (${resendSecondsLeft}s)` : ""}
             </Button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={pending}
-            onClick={() => {
-              setStep("request");
-              setOtpCode("");
-              setErrors(null);
-              setInfo(null);
-              setResendAvailableAt(null);
-            }}
-          >
-            {isIt ? "Cambia email" : "Change email"}
-          </Button>
+          <div className="flex flex-col items-start gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={pending}
+              onClick={() => {
+                resetMessages();
+                resetOtpFlow();
+              }}
+            >
+              {isIt ? "Cambia email" : "Change email"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={pending}
+              onClick={() => {
+                setMethod("password");
+                resetMessages();
+                resetOtpFlow();
+              }}
+            >
+              {isIt ? "Accedi con password invece" : "Sign in with password instead"}
+            </Button>
+          </div>
         </form>
       )}
+
+      <div className="mt-4 text-sm">
+        <Link href={`/${locale}/forgot-password`} className="text-muted-foreground hover:underline">
+          {isIt ? "Password dimenticata?" : "Forgot password?"}
+        </Link>
+      </div>
 
       <RestoreAccountDialog
         open={restoreOpen}

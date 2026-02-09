@@ -1,7 +1,15 @@
 "use client";
 
 import { createContext, useContext, useMemo, useState, useCallback } from "react";
-import { parseApiError } from "@/lib/api/errors";
+import { ApiError } from "@/lib/api/errors";
+import {
+  login as apiLogin,
+  refresh as apiRefresh,
+  logout as apiLogout,
+  registerWithOtp as apiRegisterWithOtp,
+  requestLoginOtp as apiRequestLoginOtp,
+  requestRegisterOtp as apiRequestRegisterOtp,
+} from "@/lib/api/auth";
 
 type SessionState = {
   userId: number | null;
@@ -10,8 +18,10 @@ type SessionState = {
 };
 
 type AuthActions = {
+  requestLoginOtp: (email: string) => Promise<void>;
   login: (payload: { email: string; password?: string | null; otpCode?: string | null }) => Promise<void>;
-  register: (payload: { username: string; email: string; password?: string | null }) => Promise<void>;
+  requestRegisterOtp: (payload: { username: string; email: string }) => Promise<void>;
+  register: (payload: { username: string; email: string; otpCode: string; password?: string | null }) => Promise<void>;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -22,33 +32,44 @@ const ActionsCtx = createContext<AuthActions | null>(null);
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<SessionState>({ userId: null, accessToken: null, accessTokenExpiresAt: null });
 
+  const requestLoginOtp = useCallback(async (email: string) => {
+    await apiRequestLoginOtp(email);
+  }, []);
+
   const login = useCallback(async (payload: { email: string; password?: string | null; otpCode?: string | null }) => {
-    const res = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (!res.ok) throw await parseApiError(res);
-    const data = await res.json();
+    const hasPassword = !!payload.password;
+    const hasOtp = !!payload.otpCode;
+    if (!hasPassword && !hasOtp) {
+      throw new ApiError("Missing credentials", 400, "missing_credentials");
+    }
+
+    const data = await apiLogin(payload);
     setState({ userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
   }, []);
 
-  const register = useCallback(async (payload: { username: string; email: string; password?: string | null }) => {
-    const res = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (!res.ok) throw new Error("Register failed");
-    const data = await res.json();
+  const requestRegisterOtp = useCallback(async (payload: { username: string; email: string }) => {
+    await apiRequestRegisterOtp(payload.username, payload.email);
+  }, []);
+
+  const register = useCallback(async (payload: { username: string; email: string; otpCode: string; password?: string | null }) => {
+    const data = await apiRegisterWithOtp(payload.username, payload.email, payload.otpCode, payload.password);
     setState({ userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
   }, []);
 
   const refresh = useCallback(async () => {
-    const res = await fetch("/api/auth/refresh", { method: "POST" });
-    if (!res.ok) throw new Error("Refresh failed");
-    const data = await res.json();
+    const data = await apiRefresh();
     setState({ userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await apiLogout(state.accessToken);
     setState({ userId: null, accessToken: null, accessTokenExpiresAt: null });
-  }, []);
+  }, [state.accessToken]);
 
-  const actions = useMemo<AuthActions>(() => ({ login, register, refresh, logout }), [login, register, refresh, logout]);
+  const actions = useMemo<AuthActions>(
+    () => ({ requestLoginOtp, login, requestRegisterOtp, register, refresh, logout }),
+    [requestLoginOtp, login, requestRegisterOtp, register, refresh, logout]
+  );
 
   return (
     <SessionCtx.Provider value={state}>

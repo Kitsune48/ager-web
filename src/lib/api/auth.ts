@@ -1,20 +1,84 @@
-import { API_BASE } from "@/lib/api/client";
 import { parseApiError } from "@/lib/api/errors";
-import type { AuthResultDto, LoginRequest } from "@/lib/auth/types";
+import type {
+  AuthResultDto,
+  LoginRequest,
+  RegisterRequest,
+  RequestLoginOtpCodeRequest,
+  RequestRegisterOtpCodeRequest,
+} from "@/lib/auth/types";
 
-export type { LoginRequest, AuthResultDto };
+export type { LoginRequest, RegisterRequest, AuthResultDto };
 
-export async function login(body: LoginRequest): Promise<AuthResultDto> {
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
+async function postJson<T>(path: string, body?: unknown, headers?: HeadersInit): Promise<T> {
+  const res = await fetch(path, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json", ...(headers ?? {}) },
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 
-  if (!res.ok) {
-    throw await parseApiError(res);
-  }
+  if (!res.ok) throw await parseApiError(res);
+  return (await res.json()) as T;
+}
 
-  return (await res.json()) as AuthResultDto;
+async function postNoContent(path: string, body?: unknown, headers?: HeadersInit): Promise<void> {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(headers ?? {}) },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) throw await parseApiError(res);
+}
+
+export async function requestLoginOtp(email: string): Promise<void> {
+  await postNoContent("/api/auth/login/request-code", { email } satisfies RequestLoginOtpCodeRequest);
+}
+
+export async function loginWithOtp(email: string, otpCode: string): Promise<AuthResultDto> {
+  return postJson<AuthResultDto>("/api/auth/login", { email, otpCode } satisfies LoginRequest);
+}
+
+export async function loginWithPassword(email: string, password: string): Promise<AuthResultDto> {
+  return postJson<AuthResultDto>("/api/auth/login", { email, password } satisfies LoginRequest);
+}
+
+export async function requestRegisterOtp(username: string, email: string): Promise<void> {
+  await postNoContent("/api/auth/register/request-code", { username, email } satisfies RequestRegisterOtpCodeRequest);
+}
+
+export async function registerWithOtp(
+  username: string,
+  email: string,
+  otpCode: string,
+  password?: string | null
+): Promise<AuthResultDto> {
+  const body: RegisterRequest = {
+    username,
+    email,
+    otpCode,
+    ...(password ? { password } : {}),
+  };
+
+  return postJson<AuthResultDto>("/api/auth/register", body);
+}
+
+// Uses the httpOnly refresh cookie managed by Next.js route handlers.
+export async function refresh(refreshToken?: string): Promise<AuthResultDto> {
+  return postJson<AuthResultDto>(
+    "/api/auth/refresh",
+    refreshToken ? { refreshToken } : undefined
+  );
+}
+
+// Logout forwards Authorization + refreshToken cookie to backend.
+export async function logout(accessToken: string | null, refreshToken?: string): Promise<void> {
+  await postNoContent(
+    "/api/auth/logout",
+    refreshToken ? { refreshToken } : undefined,
+    accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+  );
+}
+
+// Back-compat helper for callers that still use a single login(payload).
+export async function login(body: LoginRequest): Promise<AuthResultDto> {
+  return postJson<AuthResultDto>("/api/auth/login", body);
 }

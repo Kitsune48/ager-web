@@ -3,7 +3,13 @@ export type ProblemDetails = {
   title?: string;
   status?: number;
   detail?: string;
+  // legacy / non-standard
   errorCode?: string;
+  // ASP.NET ProblemDetails extensions
+  extensions?: {
+    errorCode?: string;
+    errors?: Record<string, string[] | string>;
+  };
   traceId?: string;
 };
 
@@ -29,7 +35,10 @@ export async function parseApiError(res: Response): Promise<ApiError> {
   // Try ProblemDetails JSON first
   try {
     const json = JSON.parse(raw) as ProblemDetails & Record<string, unknown>;
-    const code = (json.errorCode as string | undefined) ?? undefined;
+    const code =
+      (json.extensions?.errorCode as string | undefined) ??
+      (json.errorCode as string | undefined) ??
+      undefined;
     const message =
       json.detail ||
       json.title ||
@@ -41,4 +50,17 @@ export async function parseApiError(res: Response): Promise<ApiError> {
     // Fallback: plain text
     return new ApiError(raw, status);
   }
+}
+
+export function getProblemDetailsFieldErrors(details: unknown): Record<string, string[]> {
+  const pd = details as ProblemDetails | undefined;
+  const errors = pd?.extensions?.errors;
+  if (!errors || typeof errors !== "object") return {};
+
+  const normalized: Record<string, string[]> = {};
+  for (const [field, value] of Object.entries(errors)) {
+    if (Array.isArray(value)) normalized[field] = value.filter((v) => typeof v === "string");
+    else if (typeof value === "string") normalized[field] = [value];
+  }
+  return normalized;
 }

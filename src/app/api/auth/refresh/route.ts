@@ -8,16 +8,24 @@ const API_BASE = (process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_U
 );
 const BACKEND_AUTH = `${API_BASE}/api/auth`;
 
-export async function POST() {
-  const refresh = await readRefreshCookie();
-  if (!refresh) {
-    return NextResponse.json({ message: "No refresh token" }, { status: 401 });
+export async function POST(req: Request) {
+  const refreshCookie = await readRefreshCookie();
+  let refreshToken: string | null = refreshCookie;
+  if (!refreshToken) {
+    try {
+      const body = (await req.json()) as Partial<RefreshTokenRequest>;
+      if (typeof body?.refreshToken === "string") refreshToken = body.refreshToken;
+    } catch {
+      // ignore
+    }
   }
+
+  if (!refreshToken) return NextResponse.json({ message: "No refresh token" }, { status: 401 });
 
   const res = await fetch(`${BACKEND_AUTH}/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken: refresh } satisfies RefreshTokenRequest),
+    body: JSON.stringify({ refreshToken: refreshToken } satisfies RefreshTokenRequest),
   });
 
   if (!res.ok) {

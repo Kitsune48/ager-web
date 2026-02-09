@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, RotateCw } from "lucide-react";
+import { Bell, CircleUser, Settings, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeaderSearch from "@/components/search/HeaderSearch";
 import {
@@ -98,22 +98,41 @@ export default function AppHeader() {
         </DropdownMenu>
 
         {isAuthed ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" aria-label={locale === "it" ? "Profilo" : "Profile"}>
-                {locale === "it" ? "Profilo" : "Profile"}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/${locale}/profile`}>{locale === "it" ? "Profilo" : "Profile"}</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onSelect={onLogout}>
-                {locale === "it" ? "Esci" : "Logout"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              aria-label={locale === "it" ? "Profilo" : "Profile"}
+              title={locale === "it" ? "Profilo" : "Profile"}
+            >
+              <Link href={`/${locale}/profile`}>
+                <CircleUser className="h-5 w-5" />
+              </Link>
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={locale === "it" ? "Impostazioni" : "Settings"}
+                  title={locale === "it" ? "Impostazioni" : "Settings"}
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link href={`/${locale}/profile`}>{locale === "it" ? "Profilo" : "Profile"}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive" onSelect={onLogout}>
+                  {locale === "it" ? "Esci" : "Logout"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         ) : (
           <Button size="sm" variant="default" asChild>
             <Link href={`/${locale}/login`}>{locale === "it" ? "Accedi" : "Sign in"}</Link>

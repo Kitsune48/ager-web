@@ -120,7 +120,11 @@ export default function SearchPageClient() {
         {q && query.isError && (
           <div className="rounded border border-destructive/40 p-4 text-sm text-destructive">
             {locale === "it" ? "Errore durante la ricerca." : "Search failed."}
-            <div className="mt-2 text-xs text-muted-foreground">{(query.error as any)?.message ?? ""}</div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              {locale === "it"
+                ? "Impossibile completare la richiesta. Riprova tra poco."
+                : "We couldn't complete the request. Please try again."}
+            </div>
           </div>
         )}
 

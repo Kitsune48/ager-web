@@ -1,5 +1,3 @@
-import { API_BASE } from "@/lib/api/client";
-
 export type ArticleSearchItem = {
   articleId: number;
   title: string;
@@ -27,7 +25,7 @@ export async function searchArticles(args: {
   const pageSizeRaw = args.pageSize ?? 20;
   const pageSize = Math.min(50, Math.max(1, pageSizeRaw));
 
-  const url = new URL(`${API_BASE}/api/articles/search`);
+  const url = new URL(`/api/articles/search`, typeof window !== "undefined" ? window.location.origin : "http://localhost");
   url.searchParams.set("q", q);
   url.searchParams.set("page", String(page));
   url.searchParams.set("pageSize", String(pageSize));

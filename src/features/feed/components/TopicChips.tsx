@@ -15,7 +15,7 @@ export default function TopicChips() {
   const order: TopicKey[] = ["all", "tech", "business", "design", "ai"];
 
   return (
-    <nav className="mb-4 flex flex-wrap items-center gap-2.5">
+    <nav className="mb-4 flex flex-wrap items-center gap-3">
       {order.map((key) => {
         const selected = key === topic;
         const href = `/${locale}/feed?tab=${tab}&topic=${key}`;

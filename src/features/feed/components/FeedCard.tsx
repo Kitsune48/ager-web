@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useInteract } from "@/features/interactions/useInteract";
 import { useState } from "react";
 import AddToListDialog from "@/features/lists/components/AddToListDialog";
+import { toast } from "sonner";
+import { useSession } from "@/lib/auth/session";
 
 function timeAgo(iso: string, locale: string) {
   const d = new Date(iso);
@@ -63,11 +65,44 @@ export default function FeedCard(props: FeedCardProps) {
   const rel = timeAgo(publishedAt, locale ?? "it");
   const hasImage = !!imageUrl;
 
+  const { accessToken } = useSession();
+
   // From interactions: like & hide only
   const { like, hide } = useInteract();
 
   // Dialog state for “Salva in…”
   const [addOpen, setAddOpen] = useState(false);
+
+  const detailHref = `/${locale}/articles/${articleId}`;
+
+  async function shareOrCopy(opts: { title: string; url: string }) {
+    const { title, url } = opts;
+    const nav = typeof window !== "undefined" ? window.navigator : undefined;
+
+    try {
+      if (nav?.share) {
+        await nav.share({ title, url });
+        return;
+      }
+
+      if (nav?.clipboard?.writeText) {
+        await nav.clipboard.writeText(url);
+        toast(locale === "it" ? "Link copiato" : "Link copied");
+        return;
+      }
+
+      // fallback
+      const el = document.createElement("textarea");
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      toast(locale === "it" ? "Link copiato" : "Link copied");
+    } catch {
+      toast(locale === "it" ? "Impossibile condividere" : "Unable to share");
+    }
+  }
 
   return (
     <>
@@ -124,6 +159,7 @@ export default function FeedCard(props: FeedCardProps) {
               variant="secondary"
               className="gap-2"
               onClick={() => like(articleId)}
+              disabled={!accessToken}
               aria-label="Mi piace"
               title="Mi piace"
             >
@@ -149,8 +185,8 @@ export default function FeedCard(props: FeedCardProps) {
               variant="secondary"
               className="gap-2"
               onClick={async () => {
-                if (navigator.share) await navigator.share({ title, url });
-                else await navigator.clipboard.writeText(url);
+                const shareUrl = window.location.origin + detailHref;
+                await shareOrCopy({ title, url: shareUrl });
               }}
               aria-label="Condividi"
               title="Condividi"

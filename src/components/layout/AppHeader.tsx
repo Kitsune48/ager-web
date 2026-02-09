@@ -48,10 +48,8 @@ export default function AppHeader() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link href={isAuthed ? `/${locale}/profile` : `/${locale}/login`}>
-                {isAuthed ? (locale === "it" ? "Profilo" : "Profile") : (locale === "it" ? "Accedi" : "Sign in")}
-              </Link>
+            <DropdownMenuItem disabled>
+              {locale === "it" ? "Notifiche: presto disponibili" : "Notifications: coming soon"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

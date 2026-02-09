@@ -24,6 +24,12 @@ export function useInteract() {
   const qc = useQueryClient();
   const timers = useRef<Map<string, number>>(new Map());
 
+  function requireAuth(): boolean {
+    if (accessToken) return true;
+    toast("Accedi per continuare", { description: "Devi essere autenticato per usare questa azione." });
+    return false;
+  }
+
   function delayCommit(articleId: number, fn: () => void) {
     const key = String(articleId);
     const existing = timers.current.get(key);
@@ -57,6 +63,7 @@ export function useInteract() {
   }
 
   function like(articleId: number) {
+    if (!requireAuth()) return;
     delayCommit(articleId, () => commit.mutate({ articleId, type: "LIKE" }));
     toast("Mi piace", {
       description: "Azione programmata. Annulla?",
@@ -71,6 +78,7 @@ export function useInteract() {
   }
 
   function save(articleId: number) {
+    if (!requireAuth()) return;
     delayCommit(articleId, () => commit.mutate({ articleId, type: "SAVE" }));
     toast("Salvato", {
       description: "Azione programmata. Annulla?",
@@ -85,6 +93,7 @@ export function useInteract() {
   }
 
   function hide(articleId: number) {
+    if (!requireAuth()) return;
     // Take snapshots of all feed-related caches (for Undo)
     const snapshots: Array<{ key: unknown[]; data: unknown }> = [];
     const queries = qc.getQueriesData({ queryKey: ["feed"] });
@@ -140,6 +149,7 @@ export function useInteract() {
   }
 
   function report(articleId: number, reason?: string) {
+    if (!requireAuth()) return;
     commit.mutate({ articleId, type: "REPORT", reason });
     toast("Segnalato", { description: "Grazie per la tua segnalazione." });
   }

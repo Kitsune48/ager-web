@@ -52,12 +52,14 @@ export default function ListsIndexPage() {
       </div>
 
       {isLoading && (
-        <div className="text-sm text-muted-foreground">Caricamento…</div>
+        <div className="text-sm text-muted-foreground">
+          {locale === "it" ? "Caricamento…" : "Loading…"}
+        </div>
       )}
 
       {isError && (
         <div className="text-sm text-destructive">
-          Errore nel caricare le liste.
+          {locale === "it" ? "Errore nel caricare le liste." : "Failed to load lists."}
         </div>
       )}
 
@@ -87,7 +89,7 @@ export default function ListsIndexPage() {
               <div className="ml-auto flex items-center gap-2">
                 {l.itemsCount != null && (
                   <span className="text-xs text-muted-foreground">
-                    {l.itemsCount} articoli
+                    {l.itemsCount} {locale === "it" ? "articoli" : "articles"}
                   </span>
                 )}
 
@@ -114,9 +116,12 @@ export default function ListsIndexPage() {
                         );
                       },
                       onError: (e: any) => {
-                        toast("Errore", {
+                        toast(locale === "it" ? "Errore" : "Error", {
                           description:
-                            e?.message ?? "Impossibile eliminare la lista",
+                            e?.message ??
+                            (locale === "it"
+                              ? "Impossibile eliminare la lista"
+                              : "Unable to delete the list"),
                         });
                       },
                     });

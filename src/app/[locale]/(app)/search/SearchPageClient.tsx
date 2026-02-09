@@ -145,7 +145,7 @@ export default function SearchPageClient() {
               ))}
             </div>
 
-            <div className="mt-5 flex items-center justify-between">
+            <div className="mt-8 flex items-center justify-between pb-2">
               <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page <= 1}>
                 {locale === "it" ? "Precedente" : "Previous"}
               </Button>

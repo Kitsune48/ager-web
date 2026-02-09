@@ -36,7 +36,9 @@ export default function ListDetailPage() {
   if (!Number.isFinite(listId)) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-6">
-        <p className="text-sm text-destructive">ID lista non valido.</p>
+        <p className="text-sm text-destructive">
+          {locale === "it" ? "ID lista non valido." : "Invalid list ID."}
+        </p>
       </div>
     );
   }
@@ -70,12 +72,16 @@ export default function ListDetailPage() {
 
       {/* Loading / error / empty states */}
       {isLoading && (
-        <div className="text-sm text-muted-foreground">Caricamento…</div>
+            <div className="text-sm text-muted-foreground">
+              {locale === "it" ? "Caricamento…" : "Loading…"}
+            </div>
       )}
 
       {isError && (
         <div className="text-sm text-destructive">
-          Errore nel caricare gli articoli.
+              {locale === "it"
+                ? "Errore nel caricare gli articoli."
+                : "Failed to load articles."}
         </div>
       )}
 
@@ -161,7 +167,7 @@ export default function ListDetailPage() {
                             );
                           },
                           onError: (err: any) => {
-                            toast("Errore", {
+                            toast(locale === "it" ? "Errore" : "Error", {
                               description:
                                 err?.message ??
                                 (locale === "it"

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import HeaderSearch from "@/components/search/HeaderSearch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth/session";
 
@@ -17,10 +17,33 @@ export default function AppHeader() {
   const locale = params?.locale ?? "it";
   const search = useSearchParams();
   const tab = search.get("tab") ?? "latest";
+  const pathname = usePathname();
   const qc = useQueryClient();
 
   const refresh = () => {
-    qc.invalidateQueries({ queryKey: ["feed", tab] });
+    // Invalidate caches based on current page.
+    // NOTE: we use partial keys so it matches variants like ["feed", tab, topic].
+    if (pathname.includes("/feed")) {
+      qc.invalidateQueries({ queryKey: ["feed", tab] });
+      return;
+    }
+
+    if (pathname.includes("/lists")) {
+      qc.invalidateQueries({ queryKey: ["lists"] });
+      return;
+    }
+
+    if (pathname.includes("/profile")) {
+      qc.invalidateQueries({ queryKey: ["me"] });
+      return;
+    }
+
+    if (pathname.includes("/search")) {
+      qc.invalidateQueries({ queryKey: ["articleSearchPublic"] });
+      return;
+    }
+
+    qc.invalidateQueries();
   };
 
   return (
@@ -38,7 +61,13 @@ export default function AppHeader() {
       </div>
 
       <div className="ml-auto flex items-center gap-2 md:ml-0">
-        <Button variant="ghost" size="icon" aria-label="Refresh feed" onClick={refresh} title="Refresh feed">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={locale === "it" ? "Ricarica" : "Refresh"}
+          onClick={refresh}
+          title={locale === "it" ? "Ricarica" : "Refresh"}
+        >
           <RotateCw className="h-5 w-5" />
         </Button>
         <DropdownMenu>

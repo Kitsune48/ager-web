@@ -61,7 +61,8 @@ export default function FeedCard(props: FeedCardProps) {
     estimatedReadingMinutes,
   } = props;
 
-  const { locale } = useParams() as { locale: string };
+  const { locale } = useParams() as { locale?: "it" | "en" };
+  const isIt = locale !== "en";
   const rel = timeAgo(publishedAt, locale ?? "it");
   const hasImage = !!imageUrl;
 
@@ -160,11 +161,11 @@ export default function FeedCard(props: FeedCardProps) {
               className="gap-2"
               onClick={() => like(articleId)}
               disabled={!accessToken}
-              aria-label="Mi piace"
-              title="Mi piace"
+              aria-label={isIt ? "Mi piace" : "Like"}
+              title={isIt ? "Mi piace" : "Like"}
             >
               <Heart className="h-4 w-4" />
-              <span className="hidden sm:inline">Mi piace</span>
+              <span className="hidden sm:inline">{isIt ? "Mi piace" : "Like"}</span>
             </Button>
 
             {/* Open the AddToListDialog */}
@@ -173,11 +174,11 @@ export default function FeedCard(props: FeedCardProps) {
               variant="secondary"
               className="gap-2"
               onClick={() => setAddOpen(true)}
-              aria-label="Salva in…"
-              title="Salva in…"
+              aria-label={isIt ? "Salva in…" : "Save to…"}
+              title={isIt ? "Salva in…" : "Save to…"}
             >
               <Bookmark className="h-4 w-4" />
-              <span className="hidden sm:inline">Salva in…</span>
+              <span className="hidden sm:inline">{isIt ? "Salva in…" : "Save to…"}</span>
             </Button>
 
             <Button
@@ -188,11 +189,11 @@ export default function FeedCard(props: FeedCardProps) {
                 const shareUrl = window.location.origin + detailHref;
                 await shareOrCopy({ title, url: shareUrl });
               }}
-              aria-label="Condividi"
-              title="Condividi"
+              aria-label={isIt ? "Condividi" : "Share"}
+              title={isIt ? "Condividi" : "Share"}
             >
               <Share2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Condividi</span>
+              <span className="hidden sm:inline">{isIt ? "Condividi" : "Share"}</span>
             </Button>
 
             <Button
@@ -200,11 +201,11 @@ export default function FeedCard(props: FeedCardProps) {
               variant="ghost"
               className="ml-auto text-muted-foreground hover:text-foreground"
               onClick={() => hide(articleId)}
-              aria-label="Nascondi"
-              title="Non mi interessa"
+              aria-label={isIt ? "Nascondi" : "Hide"}
+              title={isIt ? "Non mi interessa" : "Not interested"}
             >
               <EyeOff className="h-4 w-4" />
-              <span className="hidden sm:inline">Nascondi</span>
+              <span className="hidden sm:inline">{isIt ? "Nascondi" : "Hide"}</span>
             </Button>
           </div>
         </div>

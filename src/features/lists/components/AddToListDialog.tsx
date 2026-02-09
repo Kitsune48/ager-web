@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import {
   useMyLists,
   useAddToList,
@@ -32,6 +33,9 @@ export default function AddToListDialog({
   articleId,
   articleTitle,
 }: Props) {
+  const { locale } = useParams() as { locale?: "it" | "en" };
+  const isIt = locale !== "en";
+
   const { data: lists, isLoading, isError } = useMyLists();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [note, setNote] = useState("");
@@ -62,8 +66,10 @@ export default function AddToListDialog({
 
   function handleSave() {
     if (!selectedId) {
-      toast("Seleziona una lista", {
-        description: "Scegli una lista in cui salvare l'articolo.",
+      toast(isIt ? "Seleziona una lista" : "Select a list", {
+        description: isIt
+          ? "Scegli una lista in cui salvare l'articolo."
+          : "Choose a list where you want to save the article.",
       });
       return;
     }
@@ -79,18 +85,25 @@ export default function AddToListDialog({
       {
         onSuccess: () => {
           localStorage.setItem(LAST_LIST_KEY, String(selectedId));
-          toast("Articolo salvato", {
+          toast(isIt ? "Articolo salvato" : "Article saved", {
             description: targetList
-              ? `Aggiunto a “${targetList.name}”.`
-              : "Aggiunto alla lista selezionata.",
+              ? isIt
+                ? `Aggiunto a “${targetList.name}”.`
+                : `Added to “${targetList.name}”.`
+              : isIt
+                ? "Aggiunto alla lista selezionata."
+                : "Added to the selected list.",
           });
           setNote("");
           onOpenChange(false);
         },
         onError: (e: any) => {
-          toast("Errore", {
+          toast(isIt ? "Errore" : "Error", {
             description:
-              e?.message ?? "Impossibile salvare l'articolo nella lista.",
+              e?.message ??
+              (isIt
+                ? "Impossibile salvare l'articolo nella lista."
+                : "Unable to save the article to the list."),
           });
         },
       }
@@ -103,28 +116,33 @@ export default function AddToListDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Salva in una lista</DialogTitle>
+          <DialogTitle>{isIt ? "Salva in una lista" : "Save to a list"}</DialogTitle>
           <DialogDescription className="mt-1">
-            Scegli una delle tue liste di lettura per salvare:
+            {isIt
+              ? "Scegli una delle tue liste di lettura per salvare:"
+              : "Choose one of your reading lists to save:"}
             <br />
             <span className="font-medium">{articleTitle}</span>
           </DialogDescription>
         </DialogHeader>
 
         {isLoading && (
-          <p className="text-sm text-muted-foreground">Caricamento liste…</p>
+          <p className="text-sm text-muted-foreground">
+            {isIt ? "Caricamento liste…" : "Loading lists…"}
+          </p>
         )}
 
         {isError && (
           <p className="text-sm text-destructive">
-            Errore nel caricare le liste.
+            {isIt ? "Errore nel caricare le liste." : "Failed to load lists."}
           </p>
         )}
 
         {!isLoading && !isError && !hasLists && (
           <p className="text-sm text-muted-foreground">
-            Non hai ancora creato nessuna lista. Crea una lista dalla sezione
-            “Liste”.
+            {isIt
+              ? "Non hai ancora creato nessuna lista. Crea una lista dalla sezione “Liste”."
+              : "You haven't created any lists yet. Create one from the “Lists” section."}
           </p>
         )}
 
@@ -133,7 +151,7 @@ export default function AddToListDialog({
             {/* Select list */}
             <div className="mt-3 space-y-2">
               <label className="text-sm font-medium" htmlFor="list-select">
-                Lista
+                {isIt ? "Lista" : "List"}
               </label>
               <select
                 id="list-select"
@@ -144,11 +162,13 @@ export default function AddToListDialog({
                   setSelectedId(v ? Number(v) : null);
                 }}
               >
-                <option value="">Seleziona una lista…</option>
+                <option value="">{isIt ? "Seleziona una lista…" : "Select a list…"}</option>
                 {typedLists!.map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.name}
-                    {l.itemsCount != null ? ` (${l.itemsCount} articoli)` : ""}
+                    {l.itemsCount != null
+                      ? ` (${l.itemsCount} ${isIt ? "articoli" : "articles"})`
+                      : ""}
                   </option>
                 ))}
               </select>
@@ -157,14 +177,18 @@ export default function AddToListDialog({
             {/* Optional note */}
             <div className="mt-4 space-y-2">
               <label className="text-sm font-medium" htmlFor="note-textarea">
-                Nota (opzionale)
+                {isIt ? "Nota (opzionale)" : "Note (optional)"}
               </label>
               <Textarea
                 id="note-textarea"
                 rows={3}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Aggiungi un appunto per ricordarti perché hai salvato questo articolo…"
+                placeholder={
+                  isIt
+                    ? "Aggiungi un appunto per ricordarti perché hai salvato questo articolo…"
+                    : "Add a note to remember why you saved this article…"
+                }
               />
             </div>
           </>
@@ -172,13 +196,19 @@ export default function AddToListDialog({
 
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Annulla
+            {isIt ? "Annulla" : "Cancel"}
           </Button>
           <Button
             onClick={handleSave}
             disabled={addMutation.isPending || !hasLists}
           >
-            {addMutation.isPending ? "Salvataggio…" : "Salva"}
+            {addMutation.isPending
+              ? isIt
+                ? "Salvataggio…"
+                : "Saving…"
+              : isIt
+                ? "Salva"
+                : "Save"}
           </Button>
         </div>
       </DialogContent>

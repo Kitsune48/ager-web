@@ -3,14 +3,21 @@
 import { Bell, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeaderSearch from "@/components/search/HeaderSearch";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSession } from "@/lib/auth/session";
+import { useAuthActions, useSession } from "@/lib/auth/session";
 
 export default function AppHeader() {
   const { userId } = useSession();
+  const { logout } = useAuthActions();
   const isAuthed = userId != null;
 
   const params = useParams() as { locale?: "it" | "en" };
@@ -18,7 +25,14 @@ export default function AppHeader() {
   const search = useSearchParams();
   const tab = search.get("tab") ?? "latest";
   const pathname = usePathname();
+  const router = useRouter();
   const qc = useQueryClient();
+
+  const onLogout = async () => {
+    await logout();
+    qc.clear();
+    router.replace(`/${locale}/login`);
+  };
 
   const refresh = () => {
     // Invalidate caches based on current page.
@@ -83,15 +97,28 @@ export default function AppHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-          {isAuthed ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${locale}/profile`}>{locale === "it" ? "Profilo" : "Profile"}</Link>
-            </Button>
-          ) : (
-            <Button size="sm" variant="default" asChild>
-              <Link href={`/${locale}/login`}>{locale === "it" ? "Accedi" : "Sign in"}</Link>
-            </Button>
-          )}
+        {isAuthed ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" aria-label={locale === "it" ? "Profilo" : "Profile"}>
+                {locale === "it" ? "Profilo" : "Profile"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href={`/${locale}/profile`}>{locale === "it" ? "Profilo" : "Profile"}</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={onLogout}>
+                {locale === "it" ? "Esci" : "Logout"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button size="sm" variant="default" asChild>
+            <Link href={`/${locale}/login`}>{locale === "it" ? "Accedi" : "Sign in"}</Link>
+          </Button>
+        )}
       </div>
     </header>
   );

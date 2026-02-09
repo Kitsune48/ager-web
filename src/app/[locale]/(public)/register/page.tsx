@@ -1,7 +1,7 @@
 "use client";
 
 import { z } from "zod";
-import { PasswordSchema } from "@/lib/validation/password";
+import { getPasswordRuleIssues, PasswordSchema } from "@/lib/validation/password";
 import { useAuthActions } from "@/lib/auth/session";
 import { useRouter, useParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -14,24 +14,6 @@ const REQUEST_SCHEMA = z.object({
   email: z.email().max(254),
 });
 
-const VERIFY_SCHEMA = z.object({
-  otpCode: z
-    .string()
-    .regex(/^\d{6}$/, "OTP must be 6 digits"),
-  // optional: if provided, must satisfy PasswordSchema
-  password: z
-    .string()
-    .optional()
-    .transform((v) => (v === "" ? undefined : v))
-    .superRefine((v, ctx) => {
-      if (v === undefined) return;
-      const parsed = PasswordSchema.safeParse(v);
-      if (!parsed.success) {
-        ctx.addIssue({ code: "custom", message: parsed.error.issues[0]?.message ?? "Invalid password" });
-      }
-    }),
-});
-
 const RESEND_COOLDOWN_MS = 30_000;
 
 export default function RegisterPage() {
@@ -40,6 +22,42 @@ export default function RegisterPage() {
   const params = useParams() as { locale?: string };
   const locale = params?.locale ?? "it";
   const isIt = locale === "it";
+
+  const VERIFY_SCHEMA = useMemo(() => {
+    const passwordIssueMessage = (v: string): string | null => {
+      const issues = getPasswordRuleIssues(v);
+      const first = issues[0];
+      if (!first) return null;
+      if (first === "minLength") return isIt ? "Minimo 8 caratteri." : "At least 8 characters.";
+      if (first === "number") return isIt ? "Deve contenere almeno un numero." : "Must include at least one number.";
+      return isIt
+        ? "Deve contenere almeno un carattere speciale (es. !@#)."
+        : "Must include at least one special character (e.g. !@#).";
+    };
+
+    return z.object({
+      otpCode: z.string().regex(/^\d{6}$/, isIt ? "Il codice deve essere di 6 cifre" : "Code must be 6 digits"),
+      // optional: if provided, must satisfy PasswordSchema
+      password: z
+        .string()
+        .optional()
+        .transform((v) => (v === "" ? undefined : v))
+        .superRefine((v, ctx) => {
+          if (v === undefined) return;
+          const parsed = PasswordSchema.safeParse(v);
+          if (!parsed.success) {
+            ctx.addIssue({
+              code: "custom",
+              message: passwordIssueMessage(v) ?? (isIt ? "Password non valida." : "Invalid password."),
+            });
+            return;
+          }
+
+          const msg = passwordIssueMessage(v);
+          if (msg) ctx.addIssue({ code: "custom", message: msg });
+        }),
+    });
+  }, [isIt]);
   const [errors, setErrors] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [info, setInfo] = useState<string | null>(null);
@@ -237,6 +255,11 @@ export default function RegisterPage() {
               disabled={pending}
             />
             {fieldErrors.password?.[0] && <p className="text-sm text-destructive">{fieldErrors.password[0]}</p>}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {isIt
+                ? "Se la imposti: almeno 8 caratteri, 1 numero, 1 carattere speciale."
+                : "If you set it: at least 8 characters, 1 number, 1 special character."}
+            </p>
           </div>
           {info && <p className="text-sm text-muted-foreground">{info}</p>}
           {errors && <p className="text-sm text-destructive">{errors}</p>}

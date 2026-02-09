@@ -8,30 +8,58 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ApiError, getProblemDetailsFieldErrors } from "@/lib/api/errors";
-import { PasswordSchema } from "@/lib/validation/password";
+import { getPasswordRuleIssues, PasswordSchema } from "@/lib/validation/password";
 import { requestPasswordResetOtp, resetPassword } from "@/lib/api/auth";
 
 const REQUEST_SCHEMA = z.object({
   email: z.email().max(254),
 });
 
-const RESET_SCHEMA = z.object({
-  otpCode: z.string().regex(/^\d{6}$/),
-  newPassword: z.string().superRefine((v, ctx) => {
-    const parsed = PasswordSchema.safeParse(v);
-    if (!parsed.success) {
-      ctx.addIssue({
-        code: "custom",
-        message: parsed.error.issues[0]?.message ?? "Invalid password",
-      });
-    }
-  }),
-});
-
 export default function ForgotPasswordPage() {
   const { locale } = useParams() as { locale: "it" | "en" };
   const isIt = locale === "it";
   const router = useRouter();
+
+  const RESET_SCHEMA = useMemo(() => {
+    const passwordIssueMessage = (v: string): string | null => {
+      const issues = getPasswordRuleIssues(v);
+      const first = issues[0];
+      if (!first) return null;
+      if (first === "minLength") return isIt ? "Minimo 8 caratteri." : "At least 8 characters.";
+      if (first === "number") return isIt ? "Deve contenere almeno un numero." : "Must include at least one number.";
+      return isIt
+        ? "Deve contenere almeno un carattere speciale (es. !@#)."
+        : "Must include at least one special character (e.g. !@#).";
+    };
+
+    return z
+      .object({
+        otpCode: z.string().regex(/^\d{6}$/),
+        newPassword: z.string().superRefine((v, ctx) => {
+          // Keep backend/client aligned by re-using the shared schema as a baseline,
+          // but show localized, user-friendly messages.
+          const shared = PasswordSchema.safeParse(v);
+          if (!shared.success) {
+            const msg = passwordIssueMessage(v) ?? (isIt ? "Password non valida." : "Invalid password.");
+            ctx.addIssue({ code: "custom", message: msg });
+            return;
+          }
+
+          const msg = passwordIssueMessage(v);
+          if (msg) ctx.addIssue({ code: "custom", message: msg });
+        }),
+        confirmNewPassword: z.string(),
+      })
+      .superRefine((data, ctx) => {
+        if (data.newPassword !== data.confirmNewPassword) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["confirmNewPassword"],
+            message: isIt ? "Le password non coincidono." : "Passwords do not match.",
+          });
+        }
+      });
+  }, [isIt]);
 
   const [step, setStep] = useState<"request" | "reset">("request");
   const [pending, setPending] = useState(false);
@@ -42,6 +70,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   function resetMessages() {
     setInfo(null);
@@ -103,7 +132,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     resetMessages();
 
-    const parsed = RESET_SCHEMA.safeParse({ otpCode, newPassword });
+    const parsed = RESET_SCHEMA.safeParse({ otpCode, newPassword, confirmNewPassword });
     if (!parsed.success) {
       setErrors(isIt ? "Controlla i dati inseriti." : "Please check your input.");
       // best-effort: map zod errors to fields
@@ -219,6 +248,26 @@ export default function ForgotPasswordPage() {
               disabled={pending}
             />
             {fieldErrors.newPassword?.[0] && <p className="text-sm text-destructive">{fieldErrors.newPassword[0]}</p>}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {isIt
+                ? "Requisiti: almeno 8 caratteri, 1 numero, 1 carattere speciale."
+                : "Requirements: at least 8 characters, 1 number, 1 special character."}
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm">{isIt ? "Conferma nuova password" : "Confirm new password"}</label>
+            <Input
+              name="confirmNewPassword"
+              type="password"
+              autoComplete="new-password"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              disabled={pending}
+            />
+            {fieldErrors.confirmNewPassword?.[0] && (
+              <p className="text-sm text-destructive">{fieldErrors.confirmNewPassword[0]}</p>
+            )}
           </div>
 
           {info && <p className="text-sm text-muted-foreground">{info}</p>}
@@ -242,6 +291,7 @@ export default function ForgotPasswordPage() {
               setStep("request");
               setOtpCode("");
               setNewPassword("");
+              setConfirmNewPassword("");
             }}
           >
             {isIt ? "Cambia email" : "Change email"}

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useMeQuery, useUpdateMe, useChangePassword, useDeleteMe } from "@/features/profile/hooks/useMe";
 import type { UpdateMyProfileRequest } from "@/lib/api/me.types";
 import { ApiError } from "@/lib/api/me";
+import { getPasswordRuleIssues } from "@/lib/validation/password";
 
 function msg(code: string | undefined, locale: "it" | "en") {
   const it: Record<string, string> = {
@@ -108,8 +109,19 @@ export default function ProfilePage() {
       toast(locale === "it" ? "Compila tutti i campi" : "Fill in all fields");
       return;
     }
-    if (pw.newPassword.length < 8) {
-      toast(locale === "it" ? "La nuova password deve avere almeno 8 caratteri" : "New password must be at least 8 characters");
+
+    const issues = getPasswordRuleIssues(pw.newPassword);
+    if (issues.length > 0) {
+      const first = issues[0];
+      const message =
+        first === "minLength"
+          ? (locale === "it" ? "Minimo 8 caratteri." : "At least 8 characters.")
+          : first === "number"
+            ? (locale === "it" ? "Deve contenere almeno un numero." : "Must include at least one number.")
+            : (locale === "it"
+                ? "Deve contenere almeno un carattere speciale (es. !@#)."
+                : "Must include at least one special character (e.g. !@#).");
+      toast(message);
       return;
     }
     if (pw.newPassword !== pw.confirm) {
@@ -273,6 +285,11 @@ export default function ProfilePage() {
               value={pw.newPassword}
               onChange={(e) => setPw((p) => ({ ...p, newPassword: e.target.value }))}
             />
+            <p className="text-xs text-muted-foreground">
+              {locale === "it"
+                ? "Requisiti: almeno 8 caratteri, 1 numero, 1 carattere speciale."
+                : "Requirements: at least 8 characters, 1 number, 1 special character."}
+            </p>
           </div>
 
           <div className="space-y-2">

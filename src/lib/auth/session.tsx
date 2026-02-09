@@ -82,8 +82,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await apiLogout(state.accessToken);
-    setState({ ready: true, userId: null, accessToken: null, accessTokenExpiresAt: null });
+    try {
+      await apiLogout(state.accessToken);
+    } finally {
+      setState({ ready: true, userId: null, accessToken: null, accessTokenExpiresAt: null });
+    }
   }, [state.accessToken]);
 
   const actions = useMemo<AuthActions>(

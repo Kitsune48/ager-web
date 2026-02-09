@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,6 +8,8 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+
+import logo from "./logo.png";
 
 type SocialLink = {
   name: string;
@@ -71,8 +74,21 @@ export default async function Home({
     <main className="min-h-dvh bg-background text-foreground">
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href={`/${locale}`} className="text-lg font-semibold tracking-tight">
-            Ager
+          <Link
+            href={`/${locale}`}
+            className="flex items-center gap-2 text-lg font-semibold tracking-tight"
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
+              <Image
+                src={logo}
+                alt="Ager"
+                width={18}
+                height={18}
+                className="h-[18px] w-[18px] object-contain"
+                priority
+              />
+            </span>
+            <span>Ager</span>
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm sm:flex">
@@ -110,12 +126,12 @@ export default async function Home({
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
               {isIt ? "Notizie vere. Idee chiare." : "Real news. Clear ideas."}
             </h1>
-            <p className="text-muted-foreground text-base sm:text-lg">
+            <p className="text-muted-foreground text-base leading-relaxed sm:text-lg">
               {isIt
                 ? "Qui per cambiare il mondo dell'informazione, pronti a creare il tuo nuovo punto di riferimento per capire il mondo."
                 : "We’re here to rethink how you navigate information and build a new reference point for understanding the world."}
             </p>
-            <p className="text-muted-foreground text-base sm:text-lg">
+            <p className="text-muted-foreground text-base leading-relaxed sm:text-lg">
               {isIt
                 ? "Non siamo un giornale: diamo ordine a quelli che già esistono."
                 : "We’re not a newspaper: we bring order to what already exists."}
@@ -139,7 +155,18 @@ export default async function Home({
           <div className="lg:col-span-5">
             <Card>
               <CardHeader>
-                <CardTitle>{isIt ? "Su cosa si fonda Ager" : "What Ager is built on"}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-muted text-foreground">
+                    <Image
+                      src={logo}
+                      alt="Ager"
+                      width={18}
+                      height={18}
+                      className="h-[18px] w-[18px] object-contain"
+                    />
+                  </span>
+                  <CardTitle>{isIt ? "Su cosa si fonda Ager" : "What Ager is built on"}</CardTitle>
+                </div>
                 <CardDescription>
                   {isIt
                     ? "Una visione semplice: meno rumore, più comprensione."
@@ -282,7 +309,18 @@ export default async function Home({
         <div className="mx-auto max-w-6xl px-6 py-10">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="text-base font-semibold">Ager</div>
+              <div className="flex items-center gap-2 text-base font-semibold">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
+                  <Image
+                    src={logo}
+                    alt="Ager"
+                    width={18}
+                    height={18}
+                    className="h-[18px] w-[18px] object-contain"
+                  />
+                </span>
+                <span>Ager</span>
+              </div>
               <div className="text-muted-foreground text-sm">
                 {isIt
                   ? "Il futuro dell'informazione parte da qui."

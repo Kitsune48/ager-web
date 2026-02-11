@@ -20,6 +20,10 @@ export type RequestForgotPasswordOtpCodeRequest = {
   email: string;
 };
 
+export type OAuthIdTokenRequest = {
+  idToken: string;
+};
+
 export type RegisterRequest = {
   username: string;
   email: string;

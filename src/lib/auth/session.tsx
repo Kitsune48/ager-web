@@ -9,6 +9,8 @@ import {
   registerWithOtp as apiRegisterWithOtp,
   requestLoginOtp as apiRequestLoginOtp,
   requestRegisterOtp as apiRequestRegisterOtp,
+  oauthGoogle as apiOauthGoogle,
+  oauthApple as apiOauthApple,
 } from "@/lib/api/auth";
 
 type SessionState = {
@@ -23,6 +25,8 @@ type AuthActions = {
   login: (payload: { email: string; password?: string | null; otpCode?: string | null }) => Promise<void>;
   requestRegisterOtp: (payload: { username: string; email: string }) => Promise<void>;
   register: (payload: { username: string; email: string; otpCode: string; password?: string | null }) => Promise<void>;
+  oauthGoogle: (idToken: string) => Promise<void>;
+  oauthApple: (idToken: string) => Promise<void>;
   refresh: () => Promise<string | null>;
   logout: () => Promise<void>;
 };
@@ -75,6 +79,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setState({ ready: true, userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
   }, []);
 
+  const oauthGoogle = useCallback(async (idToken: string) => {
+    const data = await apiOauthGoogle(idToken);
+    setState({ ready: true, userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
+  }, []);
+
+  const oauthApple = useCallback(async (idToken: string) => {
+    const data = await apiOauthApple(idToken);
+    setState({ ready: true, userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
+  }, []);
+
   const refresh = useCallback(async (): Promise<string | null> => {
     const data = await apiRefresh();
     setState({ ready: true, userId: data.userId, accessToken: data.accessToken, accessTokenExpiresAt: data.accessTokenExpiresAt });
@@ -90,8 +104,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [state.accessToken]);
 
   const actions = useMemo<AuthActions>(
-    () => ({ requestLoginOtp, login, requestRegisterOtp, register, refresh, logout }),
-    [requestLoginOtp, login, requestRegisterOtp, register, refresh, logout]
+    () => ({ requestLoginOtp, login, requestRegisterOtp, register, oauthGoogle, oauthApple, refresh, logout }),
+    [requestLoginOtp, login, requestRegisterOtp, register, oauthGoogle, oauthApple, refresh, logout]
   );
 
   return (

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, getProblemDetailsFieldErrors } from "@/lib/api/errors";
+import OAuthButtons from "@/components/auth/OAuthButtons";
 
 const REQUEST_SCHEMA = z.object({
   username: z.string().min(1).max(30),
@@ -289,6 +290,11 @@ export default function RegisterPage() {
           </Button>
         </form>
       )}
+
+      <div className="mt-4">
+        <div className="mb-2 text-xs text-muted-foreground">{isIt ? "Oppure" : "Or"}</div>
+        <OAuthButtons disabled={pending} />
+      </div>
     </main>
   );
 }

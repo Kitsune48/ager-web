@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { z } from "zod";
 import { useAuthActions } from "@/lib/auth/session";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/errors";
 import RestoreAccountDialog from "@/components/auth/RestoreAccountDialog";
+import OAuthButtons from "@/components/auth/OAuthButtons";
 
 const REQUEST_SCHEMA = z.object({
   email: z.email().max(254),
@@ -29,9 +30,18 @@ const PASSWORD_SCHEMA = z.object({
 const RESEND_COOLDOWN_MS = 30_000;
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const { requestLoginOtp, login } = useAuthActions();
   const router = useRouter();
   const { locale } = useParams() as { locale: "it" | "en" };
+  const searchParams = useSearchParams();
   const isIt = locale === "it";
   const [errors, setErrors] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -69,6 +79,22 @@ export default function LoginPage() {
     setErrors(null);
     setInfo(null);
   }
+
+  useEffect(() => {
+    const fallback = searchParams.get("fallback");
+    if (fallback !== "external_auth_email_missing") return;
+
+    // Force OTP flow and show the actionable message inline.
+    setMethod("otp");
+    resetOtpFlow();
+    setErrors(null);
+    setInfo(
+      isIt
+        ? "Apple/Google non ha condiviso la tua email. Per continuare, accedi con OTP via email."
+        : "Apple/Google didn’t share your email. To continue, sign in with an email OTP."
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, isIt]);
 
   async function onRequestCode(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -358,6 +384,13 @@ export default function LoginPage() {
         <Link href={`/${locale}/forgot-password`} className="text-muted-foreground hover:underline">
           {isIt ? "Password dimenticata?" : "Forgot password?"}
         </Link>
+      </div>
+
+      <div className="mt-4">
+        <div className="mb-2 text-xs text-muted-foreground">
+          {isIt ? "Oppure" : "Or"}
+        </div>
+        <OAuthButtons disabled={pending} />
       </div>
 
       <RestoreAccountDialog

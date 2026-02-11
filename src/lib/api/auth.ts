@@ -2,6 +2,7 @@ import { parseApiError } from "@/lib/api/errors";
 import type {
   AuthResultDto,
   LoginRequest,
+  OAuthIdTokenRequest,
   RegisterRequest,
   RequestForgotPasswordOtpCodeRequest,
   RequestLoginOtpCodeRequest,
@@ -75,6 +76,20 @@ export async function registerWithOtp(
   };
 
   return postJson<AuthResultDto>("/api/auth/register", body);
+}
+
+export async function oauthGoogle(idToken: string): Promise<AuthResultDto> {
+  return postJson<AuthResultDto>(
+    "/api/auth/oauth/google",
+    { idToken } satisfies OAuthIdTokenRequest
+  );
+}
+
+export async function oauthApple(idToken: string): Promise<AuthResultDto> {
+  return postJson<AuthResultDto>(
+    "/api/auth/oauth/apple",
+    { idToken } satisfies OAuthIdTokenRequest
+  );
 }
 
 // Uses the httpOnly refresh cookie managed by Next.js route handlers.

@@ -53,16 +53,22 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const appleClientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
   const appleRedirectUri = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI;
+  const enableApple = process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === "true";
+
+  const showGoogle = !!googleClientId;
+  const showApple = enableApple && !!appleClientId && !!appleRedirectUri;
+
+  if (!showGoogle && !showApple) return null;
 
   useEffect(() => {
     // Preload Google script to reduce latency.
-    if (!googleClientId) return;
+    if (!showGoogle) return;
     loadScriptOnce("https://accounts.google.com/gsi/client")
       .then(() => setGoogleReady(true))
       .catch(() => {
         setGoogleReady(false);
       });
-  }, [googleClientId]);
+  }, [showGoogle, googleClientId]);
 
   function handleOAuthError(provider: "Google" | "Apple", e: unknown) {
     const err = e as ApiError;
@@ -77,7 +83,7 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
 
   async function startGoogle() {
     setActionableError(null);
-    if (!googleClientId) {
+    if (!showGoogle || !googleClientId) {
       toast(isIt ? "Google non configurato" : "Google is not configured", {
         description: isIt ? "Imposta NEXT_PUBLIC_GOOGLE_CLIENT_ID" : "Set NEXT_PUBLIC_GOOGLE_CLIENT_ID",
       });
@@ -129,6 +135,7 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
 
   async function startApple() {
     setActionableError(null);
+    if (!showApple) return;
     if (!appleClientId || !appleRedirectUri) {
       toast(isIt ? "Apple non configurato" : "Apple is not configured", {
         description: isIt
@@ -176,37 +183,41 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
 
   return (
     <div className="space-y-2">
-      <Button
-        type="button"
-        variant="secondary"
-        className="w-full"
-        onClick={startGoogle}
-        disabled={disabled || pending !== null || (!!googleClientId && !googleReady)}
-      >
-        {pending === "google"
-          ? isIt
-            ? "Accesso con Google…"
-            : "Signing in with Google…"
-          : isIt
-            ? "Continua con Google"
-            : "Continue with Google"}
-      </Button>
+      {showGoogle && (
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full"
+          onClick={startGoogle}
+          disabled={disabled || pending !== null || (!googleReady && !!googleClientId)}
+        >
+          {pending === "google"
+            ? isIt
+              ? "Accesso con Google…"
+              : "Signing in with Google…"
+            : isIt
+              ? "Continua con Google"
+              : "Continue with Google"}
+        </Button>
+      )}
 
-      <Button
-        type="button"
-        variant="secondary"
-        className="w-full"
-        onClick={startApple}
-        disabled={disabled || pending !== null}
-      >
-        {pending === "apple"
-          ? isIt
-            ? "Accesso con Apple…"
-            : "Signing in with Apple…"
-          : isIt
-            ? "Continua con Apple"
-            : "Continue with Apple"}
-      </Button>
+      {showApple && (
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full"
+          onClick={startApple}
+          disabled={disabled || pending !== null}
+        >
+          {pending === "apple"
+            ? isIt
+              ? "Accesso con Apple…"
+              : "Signing in with Apple…"
+            : isIt
+              ? "Continua con Apple"
+              : "Continue with Apple"}
+        </Button>
+      )}
 
       {actionableError && (
         <div className="rounded-md border p-3 text-sm">

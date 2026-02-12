@@ -55,20 +55,19 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
   const appleRedirectUri = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI;
   const enableApple = process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === "true";
 
-  const showGoogle = !!googleClientId;
+  // Google should be visible even if not configured yet (click will show a helpful message).
+  const showGoogle = true;
   const showApple = enableApple && !!appleClientId && !!appleRedirectUri;
-
-  if (!showGoogle && !showApple) return null;
 
   useEffect(() => {
     // Preload Google script to reduce latency.
-    if (!showGoogle) return;
+    if (!googleClientId) return;
     loadScriptOnce("https://accounts.google.com/gsi/client")
       .then(() => setGoogleReady(true))
       .catch(() => {
         setGoogleReady(false);
       });
-  }, [showGoogle, googleClientId]);
+  }, [googleClientId]);
 
   function handleOAuthError(provider: "Google" | "Apple", e: unknown) {
     const err = e as ApiError;
@@ -187,10 +186,11 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
         <Button
           type="button"
           variant="secondary"
-          className="w-full"
+          className="w-full justify-center gap-2"
           onClick={startGoogle}
           disabled={disabled || pending !== null || (!googleReady && !!googleClientId)}
         >
+          <GoogleGlyph />
           {pending === "google"
             ? isIt
               ? "Accesso con Google…"
@@ -205,7 +205,7 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
         <Button
           type="button"
           variant="secondary"
-          className="w-full"
+          className="w-full justify-center gap-2"
           onClick={startApple}
           disabled={disabled || pending !== null}
         >
@@ -241,5 +241,17 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
         </div>
       )}
     </div>
+  );
+}
+
+function GoogleGlyph() {
+  // Neutral "G" mark (not the Google logo), keeps UI readable.
+  return (
+    <span
+      aria-hidden
+      className="inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs font-semibold"
+    >
+      G
+    </span>
   );
 }

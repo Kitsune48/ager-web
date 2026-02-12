@@ -291,8 +291,12 @@ export default function RegisterPage() {
         </form>
       )}
 
-      <div className="mt-4">
-        <div className="mb-2 text-xs text-muted-foreground">{isIt ? "Oppure" : "Or"}</div>
+      <div className="mt-6">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <div className="text-xs text-muted-foreground">{isIt ? "Oppure" : "Or"}</div>
+          <div className="h-px flex-1 bg-border" />
+        </div>
         <OAuthButtons disabled={pending} />
       </div>
     </main>

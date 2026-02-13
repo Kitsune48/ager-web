@@ -310,7 +310,7 @@ export default async function Home({
               <div className="flex items-center gap-2 text-base font-semibold">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
                   <Image
-                    src={logo}
+                    src="/favicon.ico"
                     alt="Ager"
                     width={18}
                     height={18}

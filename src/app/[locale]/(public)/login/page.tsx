@@ -6,6 +6,13 @@ import { useAuthActions } from "@/lib/auth/session";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/errors";
@@ -93,7 +100,6 @@ function LoginPageInner() {
         ? "Apple/Google non ha condiviso la tua email. Per continuare, accedi con OTP via email."
         : "Apple/Google didn’t share your email. To continue, sign in with an email OTP."
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, isIt]);
 
   async function onRequestCode(e: React.FormEvent<HTMLFormElement>) {
@@ -243,164 +249,214 @@ function LoginPageInner() {
   }
 
   return (
-    <main className="mx-auto max-w-sm p-6">
-      <h1 className="mb-4 text-2xl font-bold">{isIt ? "Accedi" : "Sign in"}</h1>
+    <main className="flex min-h-dvh items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">{isIt ? "Accedi" : "Sign in"}</CardTitle>
+            <CardDescription>
+              {isIt
+                ? "Continua con email e codice, oppure con password."
+                : "Continue with email and a code, or with your password."}
+            </CardDescription>
+          </CardHeader>
 
-      {method === "password" ? (
-        <form onSubmit={onPasswordLogin} className="space-y-3">
-          <div>
-            <label className="mb-1 block text-sm">Email</label>
-            <Input
-              name="email"
-              type="email"
-              required
-              maxLength={254}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={pending}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm">{isIt ? "Password" : "Password"}</label>
-            <Input
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={pending}
-            />
-          </div>
-          {info && <p className="text-sm text-muted-foreground">{info}</p>}
-          {errors && <p className="text-sm text-destructive">{errors}</p>}
-          <Button type="submit" disabled={pending}>
-            {pending ? (isIt ? "Accesso..." : "Signing in...") : (isIt ? "Accedi" : "Sign in")}
-          </Button>
+          <CardContent className="space-y-6">
+            {method === "password" ? (
+              <form onSubmit={onPasswordLogin} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm">Email</label>
+                  <Input
+                    name="email"
+                    type="email"
+                    required
+                    maxLength={254}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={pending}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">{isIt ? "Password" : "Password"}</label>
+                  <Input
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={pending}
+                  />
+                </div>
+                {info && <p className="text-sm text-muted-foreground">{info}</p>}
+                {errors && <p className="text-sm text-destructive">{errors}</p>}
+                <Button type="submit" disabled={pending} className="w-full">
+                  {pending
+                    ? isIt
+                      ? "Accesso..."
+                      : "Signing in..."
+                    : isIt
+                      ? "Accedi"
+                      : "Sign in"}
+                </Button>
 
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={pending}
-            onClick={() => {
-              setMethod("otp");
-              resetMessages();
-              resetOtpFlow();
-            }}
-          >
-            {isIt ? "Accedi con codice invece" : "Use code instead"}
-          </Button>
-        </form>
-      ) : step === "request" ? (
-        <form onSubmit={onRequestCode} className="space-y-3">
-          <div>
-            <label className="mb-1 block text-sm">Email</label>
-            <Input
-              name="email"
-              type="email"
-              required
-              maxLength={254}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={pending}
-            />
-          </div>
-          {info && <p className="text-sm text-muted-foreground">{info}</p>}
-          {errors && <p className="text-sm text-destructive">{errors}</p>}
-          <Button type="submit" disabled={pending}>
-            {pending ? (isIt ? "Invio..." : "Sending...") : (isIt ? "Richiedi codice" : "Request code")}
-          </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pending}
+                  className="w-full"
+                  onClick={() => {
+                    setMethod("otp");
+                    resetMessages();
+                    resetOtpFlow();
+                  }}
+                >
+                  {isIt ? "Accedi con codice invece" : "Use code instead"}
+                </Button>
+              </form>
+            ) : step === "request" ? (
+              <form onSubmit={onRequestCode} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm">Email</label>
+                  <Input
+                    name="email"
+                    type="email"
+                    required
+                    maxLength={254}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={pending}
+                  />
+                </div>
+                {info && <p className="text-sm text-muted-foreground">{info}</p>}
+                {errors && <p className="text-sm text-destructive">{errors}</p>}
+                <Button type="submit" disabled={pending} className="w-full">
+                  {pending
+                    ? isIt
+                      ? "Invio..."
+                      : "Sending..."
+                    : isIt
+                      ? "Richiedi codice"
+                      : "Request code"}
+                </Button>
 
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={pending}
-            onClick={() => {
-              setMethod("password");
-              resetMessages();
-              resetOtpFlow();
-            }}
-          >
-            {isIt ? "Accedi con password invece" : "Sign in with password instead"}
-          </Button>
-        </form>
-      ) : (
-        <form onSubmit={onVerify} className="space-y-3">
-          <div>
-            <label className="mb-1 block text-sm">Email</label>
-            <Input name="email" type="email" value={email} disabled />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm">OTP</label>
-            <Input
-              name="otpCode"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder={isIt ? "6 cifre" : "6 digits"}
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              disabled={pending}
-            />
-          </div>
-          {info && <p className="text-sm text-muted-foreground">{info}</p>}
-          {errors && <p className="text-sm text-destructive">{errors}</p>}
-          <div className="flex gap-2">
-            <Button type="submit" disabled={pending}>
-              {pending ? (isIt ? "Verifica..." : "Verifying...") : (isIt ? "Verifica" : "Verify")}
-            </Button>
-            <Button type="button" variant="secondary" disabled={pending || !canResend} onClick={onResend}>
-              {isIt ? "Invia di nuovo" : "Resend"}{resendSecondsLeft > 0 ? ` (${resendSecondsLeft}s)` : ""}
-            </Button>
-          </div>
-          <div className="flex flex-col items-start gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={pending}
-              onClick={() => {
-                resetMessages();
-                resetOtpFlow();
-              }}
-            >
-              {isIt ? "Cambia email" : "Change email"}
-            </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pending}
+                  className="w-full"
+                  onClick={() => {
+                    setMethod("password");
+                    resetMessages();
+                    resetOtpFlow();
+                  }}
+                >
+                  {isIt ? "Accedi con password invece" : "Sign in with password instead"}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={onVerify} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm">Email</label>
+                  <Input name="email" type="email" value={email} disabled />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">OTP</label>
+                  <Input
+                    name="otpCode"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder={isIt ? "6 cifre" : "6 digits"}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    disabled={pending}
+                  />
+                </div>
+                {info && <p className="text-sm text-muted-foreground">{info}</p>}
+                {errors && <p className="text-sm text-destructive">{errors}</p>}
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={pending} className="flex-1">
+                    {pending
+                      ? isIt
+                        ? "Verifica..."
+                        : "Verifying..."
+                      : isIt
+                        ? "Verifica"
+                        : "Verify"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={pending || !canResend}
+                    onClick={onResend}
+                    className="flex-1"
+                  >
+                    {isIt ? "Invia di nuovo" : "Resend"}
+                    {resendSecondsLeft > 0 ? ` (${resendSecondsLeft}s)` : ""}
+                  </Button>
+                </div>
+                <div className="flex flex-col items-start gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={pending}
+                    onClick={() => {
+                      resetMessages();
+                      resetOtpFlow();
+                    }}
+                  >
+                    {isIt ? "Cambia email" : "Change email"}
+                  </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={pending}
-              onClick={() => {
-                setMethod("password");
-                resetMessages();
-                resetOtpFlow();
-              }}
-            >
-              {isIt ? "Accedi con password invece" : "Sign in with password instead"}
-            </Button>
-          </div>
-        </form>
-      )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={pending}
+                    onClick={() => {
+                      setMethod("password");
+                      resetMessages();
+                      resetOtpFlow();
+                    }}
+                  >
+                    {isIt ? "Accedi con password invece" : "Sign in with password instead"}
+                  </Button>
+                </div>
+              </form>
+            )}
 
-      <div className="mt-4 text-sm">
-        <Link href={`/${locale}/forgot-password`} className="text-muted-foreground hover:underline">
-          {isIt ? "Password dimenticata?" : "Forgot password?"}
-        </Link>
+            <div className="flex items-center justify-between text-sm">
+              <Link
+                href={`/${locale}/forgot-password`}
+                className="text-muted-foreground hover:underline"
+              >
+                {isIt ? "Password dimenticata?" : "Forgot password?"}
+              </Link>
+
+              <div className="text-muted-foreground">
+                {isIt ? "Non hai un account?" : "Don’t have an account?"}{" "}
+                <Link href={`/${locale}/register`} className="hover:underline">
+                  {isIt ? "Registrati" : "Sign up"}
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <div className="text-xs text-muted-foreground">{isIt ? "Oppure" : "Or"}</div>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <OAuthButtons disabled={pending} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <RestoreAccountDialog
+          open={restoreOpen}
+          onOpenChange={setRestoreOpen}
+          locale={locale}
+          email={restoreEmail}
+        />
       </div>
-
-      <div className="mt-6">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-border" />
-          <div className="text-xs text-muted-foreground">{isIt ? "Oppure" : "Or"}</div>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-        <OAuthButtons disabled={pending} />
-      </div>
-
-      <RestoreAccountDialog
-        open={restoreOpen}
-        onOpenChange={setRestoreOpen}
-        locale={locale}
-        email={restoreEmail}
-      />
     </main>
   );
 }

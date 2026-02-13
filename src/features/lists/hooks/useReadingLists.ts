@@ -144,7 +144,13 @@ export function useCreateList() {
         accessToken
       );
     },
-    // ...
+    onSuccess: () => {
+      // Refresh list summaries everywhere (Lists page + dialogs).
+      // Partial key invalidation intentionally matches:
+      // - ["lists", "mine", ...]
+      // - ["lists", "all"]
+      qc.invalidateQueries({ queryKey: ["lists"] });
+    },
   });
 }
 

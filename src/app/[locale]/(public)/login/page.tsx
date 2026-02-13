@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { z } from "zod";
 import { useAuthActions } from "@/lib/auth/session";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -253,7 +254,19 @@ function LoginPageInner() {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">{isIt ? "Accedi" : "Sign in"}</CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
+                <Image
+                  src="/favicon.ico"
+                  alt="Ager"
+                  width={18}
+                  height={18}
+                  className="h-[18px] w-[18px] object-contain"
+                  priority
+                />
+              </span>
+              <CardTitle className="text-2xl">{isIt ? "Accedi" : "Sign in"}</CardTitle>
+            </div>
             <CardDescription>
               {isIt
                 ? "Continua con email e codice, oppure con password."

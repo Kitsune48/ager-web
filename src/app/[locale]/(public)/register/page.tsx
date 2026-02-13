@@ -4,8 +4,17 @@ import { z } from "zod";
 import { getPasswordRuleIssues, PasswordSchema } from "@/lib/validation/password";
 import { useAuthActions } from "@/lib/auth/session";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, getProblemDetailsFieldErrors } from "@/lib/api/errors";
 import OAuthButtons from "@/components/auth/OAuthButtons";
@@ -187,117 +196,188 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="mx-auto max-w-sm p-6">
-      <h1 className="mb-4 text-2xl font-bold">Create account</h1>
-      {step === "request" ? (
-        <form onSubmit={onRequestCode} className="space-y-3">
-          <div>
-            <label className="mb-1 block text-sm">Username</label>
-            <Input
-              name="username"
-              required
-              maxLength={30}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={pending}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm">Email</label>
-            <Input
-              name="email"
-              type="email"
-              required
-              maxLength={254}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={pending}
-            />
-          </div>
-          {info && <p className="text-sm text-muted-foreground">{info}</p>}
-          {errors && <p className="text-sm text-destructive">{errors}</p>}
-          <Button type="submit" disabled={pending}>
-            {pending ? (isIt ? "Invio..." : "Sending...") : (isIt ? "Richiedi codice" : "Request code")}
-          </Button>
-        </form>
-      ) : (
-        <form onSubmit={onVerify} className="space-y-3">
-          <div>
-            <label className="mb-1 block text-sm">Username</label>
-            <Input name="username" value={username} disabled />
-            {fieldErrors.username?.[0] && <p className="text-sm text-destructive">{fieldErrors.username[0]}</p>}
-          </div>
-          <div>
-            <label className="mb-1 block text-sm">Email</label>
-            <Input name="email" type="email" value={email} disabled />
-            {fieldErrors.email?.[0] && <p className="text-sm text-destructive">{fieldErrors.email[0]}</p>}
-          </div>
-          <div>
-            <label className="mb-1 block text-sm">OTP</label>
-            <Input
-              name="otpCode"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder={isIt ? "6 cifre" : "6 digits"}
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              disabled={pending}
-            />
-            {fieldErrors.otpCode?.[0] && <p className="text-sm text-destructive">{fieldErrors.otpCode[0]}</p>}
-          </div>
-          <div>
-            <label className="mb-1 block text-sm">Password</label>
-            <Input
-              name="password"
-              type="password"
-              placeholder={isIt ? "(opzionale)" : "(optional)"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={pending}
-            />
-            {fieldErrors.password?.[0] && <p className="text-sm text-destructive">{fieldErrors.password[0]}</p>}
-            <p className="mt-1 text-xs text-muted-foreground">
+    <main className="flex min-h-dvh items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
+                <Image
+                  src="/favicon.ico"
+                  alt="Ager"
+                  width={18}
+                  height={18}
+                  className="h-[18px] w-[18px] object-contain"
+                  priority
+                />
+              </span>
+              <CardTitle className="text-2xl">
+                {isIt ? "Crea account" : "Create account"}
+              </CardTitle>
+            </div>
+            <CardDescription>
               {isIt
-                ? "Se la imposti: almeno 8 caratteri, 1 numero, 1 carattere speciale."
-                : "If you set it: at least 8 characters, 1 number, 1 special character."}
-            </p>
-          </div>
-          {info && <p className="text-sm text-muted-foreground">{info}</p>}
-          {errors && <p className="text-sm text-destructive">{errors}</p>}
-          <div className="flex gap-2">
-            <Button type="submit" disabled={pending}>
-              {pending ? (isIt ? "Verifica..." : "Verifying...") : (isIt ? "Verifica" : "Verify")}
-            </Button>
-            <Button type="button" variant="secondary" disabled={pending || !canResend} onClick={onResend}>
-              {isIt ? "Invia di nuovo" : "Resend"}{resendSecondsLeft > 0 ? ` (${resendSecondsLeft}s)` : ""}
-            </Button>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={pending}
-            onClick={() => {
-              setStep("request");
-              setOtpCode("");
-              setPassword("");
-              setErrors(null);
-              setInfo(null);
-              setFieldErrors({});
-              setResendAvailableAt(null);
-            }}
-          >
-            {isIt ? "Modifica dati" : "Edit details"}
-          </Button>
-        </form>
-      )}
+                ? "Riceverai un codice via email per completare la registrazione."
+                : "We’ll email you a code to complete your registration."}
+            </CardDescription>
+          </CardHeader>
 
-      <div className="mt-6">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-border" />
-          <div className="text-xs text-muted-foreground">{isIt ? "Oppure" : "Or"}</div>
-          <div className="h-px flex-1 bg-border" />
+          <CardContent className="space-y-6">
+            {step === "request" ? (
+              <form onSubmit={onRequestCode} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm">Username</label>
+                  <Input
+                    name="username"
+                    required
+                    maxLength={30}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    disabled={pending}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">Email</label>
+                  <Input
+                    name="email"
+                    type="email"
+                    required
+                    maxLength={254}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={pending}
+                  />
+                </div>
+                {info && <p className="text-sm text-muted-foreground">{info}</p>}
+                {errors && <p className="text-sm text-destructive">{errors}</p>}
+                <Button type="submit" disabled={pending} className="w-full">
+                  {pending
+                    ? isIt
+                      ? "Invio..."
+                      : "Sending..."
+                    : isIt
+                      ? "Richiedi codice"
+                      : "Request code"}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={onVerify} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm">Username</label>
+                  <Input name="username" value={username} disabled />
+                  {fieldErrors.username?.[0] && (
+                    <p className="text-sm text-destructive">{fieldErrors.username[0]}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">Email</label>
+                  <Input name="email" type="email" value={email} disabled />
+                  {fieldErrors.email?.[0] && (
+                    <p className="text-sm text-destructive">{fieldErrors.email[0]}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">OTP</label>
+                  <Input
+                    name="otpCode"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder={isIt ? "6 cifre" : "6 digits"}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    disabled={pending}
+                  />
+                  {fieldErrors.otpCode?.[0] && (
+                    <p className="text-sm text-destructive">{fieldErrors.otpCode[0]}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">Password</label>
+                  <Input
+                    name="password"
+                    type="password"
+                    placeholder={isIt ? "(opzionale)" : "(optional)"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={pending}
+                  />
+                  {fieldErrors.password?.[0] && (
+                    <p className="text-sm text-destructive">{fieldErrors.password[0]}</p>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {isIt
+                      ? "Se la imposti: almeno 8 caratteri, 1 numero, 1 carattere speciale."
+                      : "If you set it: at least 8 characters, 1 number, 1 special character."}
+                  </p>
+                </div>
+                {info && <p className="text-sm text-muted-foreground">{info}</p>}
+                {errors && <p className="text-sm text-destructive">{errors}</p>}
+
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={pending} className="flex-1">
+                    {pending
+                      ? isIt
+                        ? "Verifica..."
+                        : "Verifying..."
+                      : isIt
+                        ? "Verifica"
+                        : "Verify"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={pending || !canResend}
+                    onClick={onResend}
+                    className="flex-1"
+                  >
+                    {isIt ? "Invia di nuovo" : "Resend"}
+                    {resendSecondsLeft > 0 ? ` (${resendSecondsLeft}s)` : ""}
+                  </Button>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pending}
+                  className="w-full"
+                  onClick={() => {
+                    setStep("request");
+                    setOtpCode("");
+                    setPassword("");
+                    setErrors(null);
+                    setInfo(null);
+                    setFieldErrors({});
+                    setResendAvailableAt(null);
+                  }}
+                >
+                  {isIt ? "Modifica dati" : "Edit details"}
+                </Button>
+              </form>
+            )}
+
+            <div className="text-sm text-muted-foreground">
+              {isIt ? "Hai già un account?" : "Already have an account?"}{" "}
+              <Link href={`/${locale}/login`} className="hover:underline">
+                {isIt ? "Accedi" : "Sign in"}
+              </Link>
+            </div>
+
+            <div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <div className="text-xs text-muted-foreground">{isIt ? "Oppure" : "Or"}</div>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <OAuthButtons disabled={pending} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-4 text-center text-xs text-muted-foreground">
+          <Link href={`/${locale}`} className="hover:underline">
+            {isIt ? "Torna alla home" : "Back to home"}
+          </Link>
         </div>
-        <OAuthButtons disabled={pending} />
       </div>
     </main>
   );

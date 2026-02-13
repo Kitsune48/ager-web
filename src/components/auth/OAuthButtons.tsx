@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,8 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
   const [actionableError, setActionableError] = useState<{ provider: "Google" | "Apple" } | null>(null);
   const [googleReady, setGoogleReady] = useState(false);
   const googleInitialized = useRef(false);
+  const googleRendered = useRef(false);
+  const googleButtonEl = useRef<HTMLDivElement | null>(null);
 
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const appleClientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
@@ -58,6 +60,20 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
   // Google should be visible even if not configured yet (click will show a helpful message).
   const showGoogle = true;
   const showApple = enableApple && !!appleClientId && !!appleRedirectUri;
+
+  const handleOAuthError = useCallback(
+    (provider: "Google" | "Apple", e: unknown) => {
+      const err = e as ApiError;
+      if (err?.code === "external_auth_email_missing") {
+        setActionableError({ provider });
+        return;
+      }
+
+      const msg = err?.message ?? (isIt ? "Accesso non riuscito." : "Sign-in failed.");
+      toast(isIt ? "Errore" : "Error", { description: msg });
+    },
+    [isIt]
+  );
 
   useEffect(() => {
     // Preload Google script to reduce latency.
@@ -69,16 +85,55 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
       });
   }, [googleClientId]);
 
-  function handleOAuthError(provider: "Google" | "Apple", e: unknown) {
-    const err = e as ApiError;
-    if (err?.code === "external_auth_email_missing") {
-      setActionableError({ provider });
-      return;
+  useEffect(() => {
+    // Render the official Google Sign-In button.
+    // Unlike One Tap prompt(), this works even when the user is not already logged in.
+    if (!googleClientId || !googleReady) return;
+
+    const g = window.google;
+    if (!g?.accounts?.id) return;
+
+    if (!googleInitialized.current) {
+      g.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: async (resp: any) => {
+          const idToken = resp?.credential;
+          if (!idToken) {
+            toast(isIt ? "Token Google mancante" : "Missing Google token");
+            setPending(null);
+            return;
+          }
+
+          try {
+            setPending("google");
+            await oauthGoogle(idToken);
+            router.push(`/${locale}/feed`);
+          } catch (e: unknown) {
+            handleOAuthError("Google", e);
+          } finally {
+            setPending(null);
+          }
+        },
+      });
+      googleInitialized.current = true;
     }
 
-    const msg = err?.message ?? (isIt ? "Accesso non riuscito." : "Sign-in failed.");
-    toast(isIt ? "Errore" : "Error", { description: msg });
-  }
+    if (!googleRendered.current && googleButtonEl.current) {
+      googleButtonEl.current.innerHTML = "";
+      const w = Math.floor(googleButtonEl.current.getBoundingClientRect().width || 0);
+      const buttonWidth = Math.max(200, Math.min(400, w || 400));
+      g.accounts.id.renderButton(googleButtonEl.current, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        shape: "rectangular",
+        text: "continue_with",
+        width: buttonWidth,
+        locale,
+      });
+      googleRendered.current = true;
+    }
+  }, [googleClientId, googleReady, handleOAuthError, isIt, locale, oauthGoogle, router]);
 
   async function startGoogle() {
     setActionableError(null);
@@ -89,47 +144,13 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
       return;
     }
 
-    try {
-      setPending("google");
-      await loadScriptOnce("https://accounts.google.com/gsi/client");
-
-      const g = window.google;
-      if (!g?.accounts?.id) {
-        toast(isIt ? "Google non disponibile" : "Google unavailable");
-        return;
-      }
-
-      if (!googleInitialized.current) {
-        g.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: async (resp: any) => {
-            const idToken = resp?.credential;
-            if (!idToken) {
-              toast(isIt ? "Token Google mancante" : "Missing Google token");
-              setPending(null);
-              return;
-            }
-
-            try {
-              await oauthGoogle(idToken);
-              router.push(`/${locale}/feed`);
-            } catch (e: unknown) {
-              handleOAuthError("Google", e);
-            } finally {
-              setPending(null);
-            }
-          },
-        });
-        googleInitialized.current = true;
-      }
-
-      // Show One Tap / prompt flow.
-      g.accounts.id.prompt();
-    } catch {
-      toast(isIt ? "Impossibile avviare Google" : "Unable to start Google sign-in");
-    } finally {
-      setPending(null);
-    }
+    // If Google is configured, the rendered button is the primary path.
+    // Keep this handler as a safe fallback (e.g. if the script failed to load).
+    toast(isIt ? "Google non disponibile" : "Google unavailable", {
+      description: isIt
+        ? "Riprova tra poco o aggiorna la pagina."
+        : "Please try again in a moment or refresh the page.",
+    });
   }
 
   async function startApple() {
@@ -183,22 +204,28 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
   return (
     <div className="space-y-2">
       {showGoogle && (
-        <Button
-          type="button"
-          variant="secondary"
-          className="w-full justify-center gap-2"
-          onClick={startGoogle}
-          disabled={disabled || pending !== null || (!googleReady && !!googleClientId)}
-        >
-          <GoogleGlyph />
-          {pending === "google"
-            ? isIt
-              ? "Accesso con Google…"
-              : "Signing in with Google…"
-            : isIt
-              ? "Continua con Google"
-              : "Continue with Google"}
-        </Button>
+        googleClientId ? (
+          <div className="relative">
+            <div
+              ref={googleButtonEl}
+              className={disabled || pending !== null ? "pointer-events-none opacity-60" : ""}
+            />
+            {(disabled || pending !== null) && (
+              <div className="absolute inset-0" aria-hidden />
+            )}
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full justify-center gap-2"
+            onClick={startGoogle}
+            disabled={disabled || pending !== null}
+          >
+            <GoogleGlyph />
+            {isIt ? "Continua con Google" : "Continue with Google"}
+          </Button>
+        )
       )}
 
       {showApple && (

@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthActions, useSession } from "@/lib/auth/session";
@@ -35,10 +36,20 @@ export default function AppHeader() {
     <header className="flex w-full items-center gap-3">
       <Link
         href={`/${locale}`}
-        className="select-none text-xl font-bold tracking-tight md:text-2xl"
+        className="flex select-none items-center gap-2 text-xl font-bold tracking-tight md:text-2xl"
         aria-label="Ager home"
       >
-        Ager
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
+          <Image
+            src="/favicon.ico"
+            alt="Ager"
+            width={18}
+            height={18}
+            className="h-[18px] w-[18px] object-contain"
+            priority
+          />
+        </span>
+        <span>Ager</span>
       </Link>
 
       <div className="relative ml-auto hidden w-full max-w-sm items-center md:flex">

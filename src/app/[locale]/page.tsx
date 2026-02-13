@@ -9,8 +9,6 @@ import {
   CardTitle
 } from "@/components/ui/card";
 
-import logo from "./logo.png";
-
 type SocialLink = {
   name: string;
   href: string;
@@ -80,7 +78,7 @@ export default async function Home({
           >
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
               <Image
-                src={logo}
+                src="/favicon.ico"
                 alt="Ager"
                 width={18}
                 height={18}
@@ -158,7 +156,7 @@ export default async function Home({
                 <div className="flex items-center gap-2">
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-muted text-foreground">
                     <Image
-                      src={logo}
+                      src="/favicon.ico"
                       alt="Ager"
                       width={18}
                       height={18}

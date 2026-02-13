@@ -80,8 +80,9 @@ export default function ForgotPasswordPage() {
 
   useEffect(() => {
     // Clear field errors when switching steps
-    resetMessages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setInfo(null);
+    setErrors(null);
+    setFieldErrors({});
   }, [step]);
 
   const backToLoginHref = `/${locale}/login`;

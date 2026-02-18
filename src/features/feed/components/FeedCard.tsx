@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
@@ -146,8 +147,18 @@ export default function FeedCard(props: FeedCardProps) {
           {topics && topics.length > 0 && (
             <div className="mt-1 flex flex-wrap gap-1">
               {topics.slice(0, 4).map((t) => (
-                <Badge key={t} variant="secondary" className="rounded-full">
-                  {t}
+                <Badge
+                  key={t}
+                  asChild
+                  variant="secondary"
+                  className="rounded-full"
+                >
+                  <Link
+                    href={`/${locale}/search?q=${encodeURIComponent(t)}&page=1&pageSize=20`}
+                    aria-label={isIt ? `Cerca: ${t}` : `Search: ${t}`}
+                  >
+                    {t}
+                  </Link>
                 </Badge>
               ))}
             </div>

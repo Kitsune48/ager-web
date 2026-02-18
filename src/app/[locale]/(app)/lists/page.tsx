@@ -72,23 +72,26 @@ export default function ListsIndexPage() {
       {lists.length > 0 && (
         <ul className="divide-y rounded border">
           {lists.map((l) => (
-            <li key={l.id} className="flex items-center gap-3 p-3">
+            <li key={l.id} className="relative flex items-center gap-3 p-3">
+              {/* Full-row link overlay (keeps delete button clickable) */}
               <Link
                 href={`/${locale}/lists/${l.id}`}
-                className="font-medium hover:underline"
-              >
-                {l.name}
-              </Link>
+                aria-label={locale === "it" ? `Apri lista ${l.name}` : `Open list ${l.name}`}
+                className="absolute inset-0 z-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
 
-              {/* Visibility */}
-              <span className="text-xs text-muted-foreground">
-                {visibilityLabel(l.visibility as 0 | 1 | 2 | undefined, locale)}
-              </span>
+              {/* Left: name + visibility (pointer events pass through to overlay) */}
+              <div className="pointer-events-none relative z-10 flex min-w-0 items-center gap-3">
+                <span className="truncate font-medium">{l.name}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {visibilityLabel(l.visibility as 0 | 1 | 2 | undefined, locale)}
+                </span>
+              </div>
 
               {/* Right side: count + delete */}
-              <div className="ml-auto flex items-center gap-2">
+              <div className="relative z-10 ml-auto flex items-center gap-2">
                 {l.itemsCount != null && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="pointer-events-none text-xs text-muted-foreground">
                     {l.itemsCount} {locale === "it" ? "articoli" : "articles"}
                   </span>
                 )}
@@ -109,11 +112,7 @@ export default function ListsIndexPage() {
                     }
                     deleteList.mutate(l.id, {
                       onSuccess: () => {
-                        toast(
-                          locale === "it"
-                            ? "Lista eliminata"
-                            : "List deleted"
-                        );
+                        toast(locale === "it" ? "Lista eliminata" : "List deleted");
                       },
                       onError: (e: any) => {
                         toast(locale === "it" ? "Errore" : "Error", {

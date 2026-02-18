@@ -18,7 +18,11 @@ export default function TopicChips() {
     <nav className="mb-4 flex flex-wrap items-center gap-3">
       {order.map((key) => {
         const selected = key === topic;
-        const href = `/${locale}/feed?tab=${tab}&topic=${key}`;
+
+        const href =
+          key === "all"
+            ? `/${locale}/feed?tab=${tab}&topic=${key}`
+            : `/${locale}/search?q=${encodeURIComponent(t(key))}&page=1&pageSize=20`;
         return (
           <Link
             key={key}

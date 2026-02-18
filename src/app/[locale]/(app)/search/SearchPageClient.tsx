@@ -61,6 +61,10 @@ export default function SearchPageClient() {
     return Math.max(1, Math.ceil(total / pageSize));
   }, [query.data?.total, pageSize]);
 
+  const pageLabel = useMemo(() => {
+    return locale === "it" ? `Pagina ${page} di ${totalPages}` : `Page ${page} of ${totalPages}`;
+  }, [locale, page, totalPages]);
+
   function setPage(nextPage: number) {
     const next = new URLSearchParams(sp.toString());
     next.set("page", String(Math.min(Math.max(1, nextPage), totalPages)));
@@ -136,7 +140,7 @@ export default function SearchPageClient() {
           <>
             <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
               <span>{locale === "it" ? `Risultati: ${query.data.total}` : `Results: ${query.data.total}`}</span>
-              <span>{locale === "it" ? `Pagina ${page} di ${totalPages}` : `Page ${page} of ${totalPages}`}</span>
+              <span>{pageLabel}</span>
             </div>
 
             <div className="space-y-3">
@@ -145,14 +149,18 @@ export default function SearchPageClient() {
               ))}
             </div>
 
-            <div className="mt-8 flex items-center justify-between pb-2">
-              <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page <= 1}>
-                {locale === "it" ? "Precedente" : "Previous"}
-              </Button>
+            <div className="mt-8 pb-2">
+              <div className="mb-2 text-center text-xs text-muted-foreground">{pageLabel}</div>
 
-              <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page >= totalPages}>
-                {locale === "it" ? "Successiva" : "Next"}
-              </Button>
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page <= 1}>
+                  {locale === "it" ? "Precedente" : "Previous"}
+                </Button>
+
+                <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page >= totalPages}>
+                  {locale === "it" ? "Successiva" : "Next"}
+                </Button>
+              </div>
             </div>
           </>
         )}

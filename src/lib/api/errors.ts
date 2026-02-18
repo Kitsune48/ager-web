@@ -3,6 +3,8 @@ export type ProblemDetails = {
   title?: string;
   status?: number;
   detail?: string;
+  // common non-ProblemDetails payload
+  message?: string;
   // legacy / non-standard
   errorCode?: string;
   // ASP.NET ProblemDetails extensions
@@ -42,6 +44,7 @@ export async function parseApiError(res: Response): Promise<ApiError> {
     const message =
       json.detail ||
       json.title ||
+      json.message ||
       code ||
       `Request failed (${status})`;
 

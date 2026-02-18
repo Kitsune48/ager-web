@@ -22,7 +22,7 @@ export default function TopicChips() {
         const href =
           key === "all"
             ? `/${locale}/feed?tab=${tab}&topic=${key}`
-            : `/${locale}/search?q=${encodeURIComponent(t(key))}&page=1&pageSize=20`;
+            : `/${locale}/search?tag=${encodeURIComponent(key)}&page=1&pageSize=20`;
         return (
           <Link
             key={key}

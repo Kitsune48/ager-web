@@ -24,6 +24,9 @@ export default withNextIntl({
 
       { protocol: 'https', hostname: '*.internazionale.it' },
 
+      // Il Sole 24 Ore
+      { protocol: 'https', hostname: '*.res.24o.it' },
+
       { protocol: 'https', hostname: '*.cloudfront.net' },
       { protocol: 'https', hostname: '*.akamaihd.net' }
     ]

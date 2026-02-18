@@ -24,7 +24,8 @@ const REQUEST_SCHEMA = z.object({
   email: z.email().max(254),
 });
 
-const TEMP_EMAIL_DETAIL = "Temporary email addresses are not allowed";
+const TEMP_EMAIL_DETAIL_EN = "Temporary email addresses are not allowed";
+const TEMP_EMAIL_DETAIL_IT = "Gli indirizzi email temporanei non sono consentiti.";
 
 const RESEND_COOLDOWN_MS = 30_000;
 
@@ -119,7 +120,7 @@ export default function RegisterPage() {
       if (err?.status === 429) {
         setErrors(isIt ? "Troppi tentativi, riprova tra poco." : "Too many attempts, try again later.");
       } else if (err?.status === 400 && err?.code === "temporary_email_not_allowed") {
-        setErrors(err?.message ?? TEMP_EMAIL_DETAIL);
+        setErrors(isIt ? TEMP_EMAIL_DETAIL_IT : TEMP_EMAIL_DETAIL_EN);
       } else if (err?.status === 409) {
         if (err?.code === "email_already_registered") {
           setErrors(isIt ? "Email già registrata." : "Email already registered.");
@@ -161,7 +162,7 @@ export default function RegisterPage() {
       if (err?.status === 401) {
         setErrors(isIt ? "Codice non valido o scaduto." : "Invalid or expired code.");
       } else if (err?.status === 400 && err?.code === "temporary_email_not_allowed") {
-        setErrors(err?.message ?? TEMP_EMAIL_DETAIL);
+        setErrors(isIt ? TEMP_EMAIL_DETAIL_IT : TEMP_EMAIL_DETAIL_EN);
       } else if (err?.status === 400 && err?.code === "otp_username_mismatch") {
         setErrors(
           isIt
@@ -194,7 +195,7 @@ export default function RegisterPage() {
       if (err?.status === 429) {
         setErrors(isIt ? "Troppi tentativi, riprova tra poco." : "Too many attempts, try again later.");
       } else if (err?.status === 400 && err?.code === "temporary_email_not_allowed") {
-        setErrors(err?.message ?? TEMP_EMAIL_DETAIL);
+        setErrors(isIt ? TEMP_EMAIL_DETAIL_IT : TEMP_EMAIL_DETAIL_EN);
       } else {
         setErrors(err?.message ?? (isIt ? "Impossibile inviare il codice." : "Unable to send the code."));
       }

@@ -32,12 +32,6 @@ export default function TagBar(props: {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Badge asChild variant={selectedTag === null ? "default" : "secondary"} className="rounded-full">
-          <Link href={hrefForTag(null)} aria-current={selectedTag === null ? "page" : undefined}>
-            {locale === "it" ? "Tutti" : "All"}
-          </Link>
-        </Badge>
-
         {tags.map((t) => {
           const selected = selectedTag === t.slug;
           return (

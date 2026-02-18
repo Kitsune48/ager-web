@@ -12,6 +12,7 @@ export default function AppSidebar() {
     { path: "/feed", label: isIt ? "Per te" : "For you" },
     { path: "/feed?tab=latest", label: isIt ? "Ultimi" : "Latest" },
     { path: "/feed?tab=top", label: "Top" },
+    { path: "/explore", label: isIt ? "Esplora" : "Explore" },
     { path: "/lists", label: isIt ? "Liste" : "Reading lists" }
   ];
 

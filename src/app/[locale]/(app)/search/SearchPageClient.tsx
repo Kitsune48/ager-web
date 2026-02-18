@@ -169,9 +169,9 @@ export default function SearchPageClient() {
       </div>
 
       {/* Input (page-local) */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <input
-          className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+          className="h-10 w-full max-w-xl rounded-md border bg-background px-3 text-sm"
           value={qInput}
           onChange={(e) => setQInput(e.target.value)}
           placeholder={locale === "it" ? "Es: aggiornamenti ucraina" : "E.g. ukraine news"}

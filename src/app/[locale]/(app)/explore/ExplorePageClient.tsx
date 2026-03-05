@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -38,9 +38,11 @@ export default function ExplorePageClient() {
     return `/${locale}/search?tag=${encodeURIComponent(slug)}&page=1&pageSize=20`;
   };
 
-  if (tagsQuery.isError) {
-    toast(isIt ? "Errore caricando i tag" : "Failed to load tags");
-  }
+  useEffect(() => {
+    if (tagsQuery.isError) {
+      toast(isIt ? "Errore caricando i tag" : "Failed to load tags");
+    }
+  }, [tagsQuery.isError, isIt]);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6">

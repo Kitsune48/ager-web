@@ -39,11 +39,11 @@ export default async function Home({
         : "Visual content, infographics and previews of what we’re building."
     },
     {
-      name: "WhatsApp (Form)",
-      href: "https://forms.gle/cGZ94Xw15YqXwVET8",
+      name: "Telegram",
+      href: "https://t.me/+LlBLi7-kP6M4MGE0",
       description: isIt
-        ? "Per dare un contributo concreto alla startup."
-        : "Want to contribute? Fill out the form and join in."
+        ? "Unisciti al nostro gruppo per aggiornamenti e discussioni in tempo reale."
+        : "Join our group for real-time updates and discussions."
     },
     {
       name: "TikTok",
@@ -96,23 +96,20 @@ export default async function Home({
             <a href="#social" className="text-muted-foreground hover:text-foreground">
               {isIt ? "Dove trovarci" : "Where to find us"}
             </a>
-            <a href="#join" className="text-muted-foreground hover:text-foreground">
-              {isIt ? "Unisciti" : "Join"}
-            </a>
+            <Link
+              href={`/${locale}/philosophy`}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {isIt ? "Filosofia" : "Philosophy"}
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" className="hidden sm:inline-flex">
               <a href="#social">{isIt ? "Scopri di più" : "Learn more"}</a>
             </Button>
-            <Button asChild>
-              <a
-                href="https://forms.gle/cGZ94Xw15YqXwVET8"
-                target="_blank"
-                rel="noreferrer"
-              >
-                {isIt ? "Unisciti" : "Join"}
-              </a>
+            <Button asChild variant="secondary" className="hidden sm:inline-flex">
+              <Link href={`/${locale}/feed`}>{isIt ? "Prova ora" : "Try now"}</Link>
             </Button>
           </div>
         </div>
@@ -136,16 +133,12 @@ export default async function Home({
             </p>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
-                <a href="#social">{isIt ? "Scopri di più" : "Learn more"}</a>
+                <Link href={`/${locale}/feed`}>{isIt ? "Prova ora" : "Try now"}</Link>
               </Button>
-              <Button asChild size="lg" variant="secondary">
-                <a
-                  href="https://forms.gle/cGZ94Xw15YqXwVET8"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {isIt ? "Scopri come puoi aiutarci" : "See how you can help"}
-                </a>
+              <Button asChild size="lg" variant="outline">
+                <Link href={`/${locale}/philosophy`}>
+                  {isIt ? "Leggi la nostra filosofia" : "Read our philosophy"}
+                </Link>
               </Button>
             </div>
           </div>
@@ -275,19 +268,19 @@ export default async function Home({
         </div>
       </section>
 
-      <section id="join" className="border-t bg-muted/20">
+      <footer className="border-t">
         <div className="mx-auto max-w-6xl px-6 py-14 sm:py-16">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold tracking-tight">
                 {isIt
-                  ? "Unisciti alla rivoluzione dell’informazione"
-                  : "Join the information revolution"}
+                  ? "Vuoi aiutarci a costruire Ager?"
+                  : "Want to help us build Ager?"}
               </h2>
               <p className="text-muted-foreground">
                 {isIt
-                  ? "Se vuoi aiutarci a costruire Ager, partiamo da qui."
-                  : "If you want to help build Ager, start here."}
+                  ? "Scopri come puoi contribuire alla rivoluzione dell'informazione."
+                  : "Learn how you can help shape the future of information."}
               </p>
             </div>
             <Button asChild size="lg">
@@ -296,42 +289,40 @@ export default async function Home({
                 target="_blank"
                 rel="noreferrer"
               >
-                {isIt ? "Scopri come puoi aiutarci" : "See how you can help"}
+                {isIt ? "Scopri come" : "Learn more"}
               </a>
             </Button>
           </div>
-        </div>
-      </section>
 
-      <footer className="border-t">
-        <div className="mx-auto max-w-6xl px-6 py-10">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-base font-semibold">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
-                  <Image
-                    src="/favicon.ico"
-                    alt="Ager"
-                    width={18}
-                    height={18}
-                    className="h-[18px] w-[18px] object-contain"
-                  />
-                </span>
-                <span>Ager</span>
+          <div className="mt-10 border-t pt-10">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-base font-semibold">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
+                    <Image
+                      src="/favicon.ico"
+                      alt="Ager"
+                      width={18}
+                      height={18}
+                      className="h-[18px] w-[18px] object-contain"
+                    />
+                  </span>
+                  <span>Ager</span>
+                </div>
+                <div className="text-muted-foreground text-sm">
+                  {isIt
+                    ? "Il futuro dell'informazione parte da qui."
+                    : "The future of information starts here."}
+                </div>
               </div>
-              <div className="text-muted-foreground text-sm">
-                {isIt
-                  ? "Il futuro dell'informazione parte da qui."
-                  : "The future of information starts here."}
-              </div>
-            </div>
 
-            <div className="flex flex-col gap-2 text-sm sm:items-end">
-              <div className="text-muted-foreground">© 2025 Ager — Tutti i diritti riservati</div>
-              <div className="text-muted-foreground">
-                <a className="hover:text-foreground" href="mailto:ager.org@gmail.com">
-                  {isIt ? "Contatti" : "Contact"}
-                </a>
+              <div className="flex flex-col gap-2 text-sm sm:items-end">
+                <div className="text-muted-foreground">© 2025 Ager — Tutti i diritti riservati</div>
+                <div className="text-muted-foreground">
+                  <a className="hover:text-foreground" href="mailto:ager.org@gmail.com">
+                    {isIt ? "Contatti" : "Contact"}
+                  </a>
+                </div>
               </div>
             </div>
           </div>

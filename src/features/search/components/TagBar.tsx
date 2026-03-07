@@ -48,7 +48,7 @@ export default function TagBar(props: {
               type="button"
               variant="secondary"
               size="sm"
-              className="rounded-full gap-2"
+              className="max-w-full rounded-full gap-2"
               aria-label={
                 locale === "it"
                   ? `Tag selezionato: ${selectedName}. Cambia tag.`
@@ -60,12 +60,16 @@ export default function TagBar(props: {
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="start">
+          <DropdownMenuContent
+            align="start"
+            sideOffset={8}
+            className="w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)]"
+          >
             {tags.map((t) => {
               const selected = selectedTag === t.slug;
               return (
-                <DropdownMenuItem key={t.slug} asChild>
-                  <Link href={hrefForTag(t.slug)} aria-current={selected ? "page" : undefined}>
+                <DropdownMenuItem key={t.slug} asChild className="max-w-full whitespace-normal break-words">
+                  <Link href={hrefForTag(t.slug)} aria-current={selected ? "page" : undefined} className="block max-w-full whitespace-normal break-words">
                     {t.name}
                   </Link>
                 </DropdownMenuItem>

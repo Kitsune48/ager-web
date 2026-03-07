@@ -14,7 +14,10 @@ export type ArticleDto = {
 };
 
 export async function getArticlePublic(articleId: number): Promise<ArticleDto> {
-  const res = await fetch(`${API_BASE}/api/articles/${articleId}`, { method: "GET" });
+  const isBrowser = typeof window !== "undefined";
+  const url = isBrowser ? `/api/articles/${articleId}` : `${API_BASE}/api/articles/${articleId}`;
+
+  const res = await fetch(url, { method: "GET", cache: "no-store" });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");

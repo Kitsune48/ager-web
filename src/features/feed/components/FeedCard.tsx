@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +11,8 @@ import { useState } from "react";
 import AddToListDialog from "@/features/lists/components/AddToListDialog";
 import { toast } from "sonner";
 import { useSession } from "@/lib/auth/session";
+import ResilientImage from "@/components/media/ResilientImage";
+import { normalizeImageUrl } from "@/lib/images/normalize";
 
 function timeAgo(iso: string, locale: string) {
   const d = new Date(iso);
@@ -65,7 +66,8 @@ export default function FeedCard(props: FeedCardProps) {
   const { locale } = useParams() as { locale?: "it" | "en" };
   const isIt = locale !== "en";
   const rel = timeAgo(publishedAt, locale ?? "it");
-  const hasImage = !!imageUrl;
+  const normalizedImageUrl = normalizeImageUrl(imageUrl, url);
+  const hasImage = !!normalizedImageUrl;
 
   const { accessToken } = useSession();
 
@@ -224,8 +226,8 @@ export default function FeedCard(props: FeedCardProps) {
         {/* Image block */}
         {hasImage && (
           <a href={url} target="_blank" rel="noreferrer" className="w-full">
-            <Image
-              src={imageUrl!}
+            <ResilientImage
+              src={normalizedImageUrl!}
               alt=""
               width={800}
               height={450}

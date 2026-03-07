@@ -304,7 +304,6 @@ export const PhilosophyPage = ({ locale, content: propContent }: PhilosophyPageP
           <h2 className="text-2xl font-semibold tracking-tight text-center" style={{ marginBottom: '4rem' }}>
             {content.nav.find(n => n.id === 'guarantees')?.label}
           </h2>
-          <div className="mx-auto mb-22 h-px w-full max-w-3xl bg-border" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {content.guarantees.map((item, idx) => (

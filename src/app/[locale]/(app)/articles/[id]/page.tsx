@@ -1,8 +1,9 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArticlePublic } from "@/lib/api/articles";
 import ArticleActions from "./ArticleActions";
+import ResilientImage from "@/components/media/ResilientImage";
+import { normalizeImageUrl } from "@/lib/images/normalize";
 
 export default async function ArticleDetailPage({
   params,
@@ -21,6 +22,7 @@ export default async function ArticleDetailPage({
   }
 
   const href = article.canonicalUrl ?? article.url;
+  const normalizedImageUrl = normalizeImageUrl(article.imageUrl, href);
   const rawLang = (article.lang ?? "").trim();
   const primaryLang = rawLang ? rawLang.split(/[-_]/)[0].toLowerCase() : "";
   const languageLabel =
@@ -65,10 +67,10 @@ export default async function ArticleDetailPage({
         )}
       </div>
 
-      {article.imageUrl && (
+      {normalizedImageUrl && (
         <div className="mt-4">
-          <Image
-            src={article.imageUrl}
+          <ResilientImage
+            src={normalizedImageUrl}
             alt=""
             width={1200}
             height={630}

@@ -12,6 +12,7 @@ type Props = {
   title: string;
   excerpt: string;
   imageUrl: string | null;
+  sourceUrl?: string | null;
   sourceName: string;
   publishedAt: string;
 };
@@ -34,7 +35,7 @@ export default function SearchResultCard(props: Props) {
   const { locale } = useParams() as { locale: string };
   const rel = timeAgo(props.publishedAt, locale ?? "it");
   const detailHref = `/${locale}/articles/${props.articleId}`;
-  const normalizedImageUrl = normalizeImageUrl(props.imageUrl, detailHref);
+  const normalizedImageUrl = normalizeImageUrl(props.imageUrl, props.sourceUrl ?? detailHref);
 
   const hasImage = !!normalizedImageUrl;
 

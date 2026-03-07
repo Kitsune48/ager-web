@@ -1,5 +1,5 @@
 import { parseApiError } from "@/lib/api/errors";
-import type { ArticleSearchResponse } from "@/lib/api/articlesSearch";
+import { enrichSearchItemsWithSourceUrl, type ArticleSearchResponse } from "@/lib/api/articlesSearch";
 
 export type ArticleTagDto = {
   slug: string;
@@ -40,5 +40,9 @@ export async function searchByTag(args: {
   });
 
   if (!res.ok) throw await parseApiError(res);
-  return (await res.json()) as ArticleSearchResponse;
+  const data = (await res.json()) as ArticleSearchResponse;
+  return {
+    ...data,
+    items: await enrichSearchItemsWithSourceUrl(data.items),
+  };
 }

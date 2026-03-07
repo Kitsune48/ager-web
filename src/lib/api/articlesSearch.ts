@@ -1,8 +1,11 @@
+import { getArticlePublic } from "@/lib/api/articles";
+
 export type ArticleSearchItem = {
   articleId: number;
   title: string;
   excerpt: string;
   imageUrl: string | null;
+  sourceUrl?: string | null;
   sourceName: string;
   publishedAt: string;
 };
@@ -13,6 +16,37 @@ export type ArticleSearchResponse = {
   page: number;
   pageSize: number;
 };
+
+function hasRelativeImageUrl(imageUrl: string | null | undefined) {
+  if (!imageUrl) return false;
+  return !/^https?:\/\//i.test(imageUrl);
+}
+
+export async function enrichSearchItemsWithSourceUrl(items: ArticleSearchItem[]): Promise<ArticleSearchItem[]> {
+  const uniqueArticleIds = Array.from(
+    new Set(items.filter((item) => hasRelativeImageUrl(item.imageUrl)).map((item) => item.articleId))
+  );
+
+  if (uniqueArticleIds.length === 0) return items;
+
+  const articleDetails = await Promise.all(
+    uniqueArticleIds.map(async (articleId) => {
+      try {
+        const article = await getArticlePublic(articleId);
+        return [articleId, article.canonicalUrl ?? article.url] as const;
+      } catch {
+        return [articleId, null] as const;
+      }
+    })
+  );
+
+  const sourceUrlByArticleId = new Map(articleDetails);
+
+  return items.map((item) => ({
+    ...item,
+    sourceUrl: sourceUrlByArticleId.get(item.articleId) ?? item.sourceUrl ?? null,
+  }));
+}
 
 export async function searchArticles(args: {
   q: string;
@@ -41,7 +75,11 @@ export async function searchArticles(args: {
     throw new Error(text || `GET /api/articles/search failed: ${res.status}`);
   }
 
-  return res.json();
+  const data = (await res.json()) as ArticleSearchResponse;
+  return {
+    ...data,
+    items: await enrichSearchItemsWithSourceUrl(data.items),
+  };
 }
 
 // Legacy helper that keeps public search behavior (no auth header required)

@@ -17,6 +17,7 @@ type Props = {
   title: string;
   excerpt: string;
   imageUrl: string | null;
+  sourceUrl?: string | null;
   sourceName: string;
   publishedAt: string;
 };
@@ -63,6 +64,7 @@ export default function SearchResultRow({
   title,
   excerpt,
   imageUrl,
+  sourceUrl,
   sourceName,
   publishedAt,
 }: Props) {
@@ -74,7 +76,7 @@ export default function SearchResultRow({
   const [addOpen, setAddOpen] = useState(false);
 
   const detailHref = `/${locale}/articles/${articleId}`;
-  const normalizedImageUrl = normalizeImageUrl(imageUrl, detailHref);
+  const normalizedImageUrl = normalizeImageUrl(imageUrl, sourceUrl ?? detailHref);
   const hasImage = !!normalizedImageUrl;
 
   // Reuse your existing interaction hook (server calls + undo toast)

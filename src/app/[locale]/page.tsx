@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,13 +16,68 @@ type SocialLink = {
   description: string;
 };
 
-export default async function Home({
-  params
-}: {
+type PageProps = {
   params: Promise<{ locale: string }>;
-}) {
+};
+
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const normalizedLocale = locale === "en" ? "en" : "it";
+  const isIt = normalizedLocale === "it";
+
+  const title = isIt ? "Ager | Notizie vere. Idee chiare." : "Ager | Real news. Clear ideas.";
+  const description = isIt
+    ? "Ager unisce social e news feed per aiutarti a capire il mondo con meno rumore e piu chiarezza."
+    : "Ager combines social and news feeds to help you understand the world with less noise and more clarity.";
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/${normalizedLocale}`,
+      languages: {
+        it: "/it",
+        en: "/en",
+        "x-default": "/it",
+      },
+    },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: `${siteUrl}/${normalizedLocale}`,
+      locale: normalizedLocale,
+      siteName: "Ager",
+    },
+  };
+}
+
+export default async function Home({ params }: PageProps) {
   const { locale } = await params;
   const isIt = locale === "it";
+
+  const pageUrl = `${siteUrl}/${locale}`;
+  const webSiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Ager",
+    url: siteUrl,
+    inLanguage: ["it", "en"],
+  };
+  const webPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: isIt ? "Ager - Notizie vere. Idee chiare." : "Ager - Real news. Clear ideas.",
+    url: pageUrl,
+    inLanguage: locale,
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Ager",
+      url: siteUrl,
+    },
+  };
 
   const socialLinks: SocialLink[] = [
     {
@@ -70,6 +126,15 @@ export default async function Home({
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
+      />
+
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link

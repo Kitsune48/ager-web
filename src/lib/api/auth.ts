@@ -210,14 +210,12 @@ export async function refresh(refreshToken?: string): Promise<AuthResultDto> {
   const stored = readStoredRefreshToken().token;
   const tokenToUse = refreshToken ?? stored;
 
-  if (!tokenToUse) {
-    throw new ApiError("No refresh token", 401, "refresh_token_missing");
-  }
-
   refreshSingleFlightPromise = (async () => {
     let data: AuthResultDto;
     try {
-      data = await postJson<AuthResultDto>("/api/auth/refresh", { refreshToken: tokenToUse });
+      data = tokenToUse
+        ? await postJson<AuthResultDto>("/api/auth/refresh", { refreshToken: tokenToUse })
+        : await postJson<AuthResultDto>("/api/auth/refresh");
     } catch (error) {
       const apiError = error as ApiError;
       if (apiError?.status === 401) {
@@ -226,12 +224,14 @@ export async function refresh(refreshToken?: string): Promise<AuthResultDto> {
       throw error;
     }
 
-    if (!data.refreshToken) {
-      clearStoredRefreshToken();
-      throw new ApiError("Refresh token missing in refresh response", 401, "refresh_token_rotation_missing");
+    // Support both modes:
+    // 1) token in body with rotation
+    // 2) HttpOnly cookie-only refresh (no token in JSON response)
+    if (data.refreshToken) {
+      return normalizeAuthResult(data);
     }
 
-    return normalizeAuthResult(data);
+    return data;
   })();
 
   try {

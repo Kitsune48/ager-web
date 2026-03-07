@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
+import ResilientImage from "@/components/media/ResilientImage";
+import { normalizeImageUrl } from "@/lib/images/normalize";
 
 type Props = {
   articleId: number;
@@ -32,8 +33,10 @@ function timeAgo(iso: string, locale: string) {
 export default function SearchResultCard(props: Props) {
   const { locale } = useParams() as { locale: string };
   const rel = timeAgo(props.publishedAt, locale ?? "it");
+  const detailHref = `/${locale}/articles/${props.articleId}`;
+  const normalizedImageUrl = normalizeImageUrl(props.imageUrl, detailHref);
 
-  const hasImage = !!props.imageUrl;
+  const hasImage = !!normalizedImageUrl;
 
   return (
     <Card className={["grid gap-4 p-4", hasImage ? "sm:grid-cols-[1fr,220px]" : ""].join(" ")}>
@@ -47,7 +50,7 @@ export default function SearchResultCard(props: Props) {
         </div>
 
         <Link
-          href={`/${locale}/articles/${props.articleId}`}
+          href={detailHref}
           className="block text-base font-semibold leading-snug hover:underline"
         >
           {props.title}
@@ -62,8 +65,8 @@ export default function SearchResultCard(props: Props) {
 
       {hasImage && (
         <div className="w-full">
-          <Image
-            src={props.imageUrl!}
+          <ResilientImage
+            src={normalizedImageUrl!}
             alt=""
             width={800}
             height={450}

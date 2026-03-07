@@ -2,13 +2,14 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import {
   useListItemsInfinite,
   useMyLists,
   useRemoveFromList,
 } from "@/features/lists/hooks/useReadingLists";
 import { Button } from "@/components/ui/button";
+import ResilientImage from "@/components/media/ResilientImage";
+import { normalizeImageUrl } from "@/lib/images/normalize";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { ReadingList, ReadingListItem } from "@/lib/api/types";
@@ -102,6 +103,7 @@ export default function ListDetailPage() {
               it.wordCount != null
                 ? Math.max(1, Math.round(it.wordCount / 200))
                 : null;
+            const normalizedImageUrl = normalizeImageUrl(it.imageUrl, it.url);
 
             return (
               <li
@@ -188,15 +190,15 @@ export default function ListDetailPage() {
                 </div>
 
                 {/* Optional image on the right */}
-                {it.imageUrl && (
+                {normalizedImageUrl && (
                   <a
                     href={it.url}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full"
                   >
-                    <Image
-                      src={it.imageUrl}
+                    <ResilientImage
+                      src={normalizedImageUrl}
                       alt=""
                       width={800}
                       height={450}

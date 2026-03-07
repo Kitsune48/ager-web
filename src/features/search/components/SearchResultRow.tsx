@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -10,6 +9,8 @@ import { useState } from "react";
 import AddToListDialog from "@/features/lists/components/AddToListDialog";
 import { useInteract } from "@/features/interactions/useInteract";
 import { useQueryClient } from "@tanstack/react-query";
+import ResilientImage from "@/components/media/ResilientImage";
+import { normalizeImageUrl } from "@/lib/images/normalize";
 
 type Props = {
   articleId: number;
@@ -72,8 +73,9 @@ export default function SearchResultRow({
   const rel = timeAgo(publishedAt, locale ?? "it");
   const [addOpen, setAddOpen] = useState(false);
 
-  const hasImage = !!imageUrl;
   const detailHref = `/${locale}/articles/${articleId}`;
+  const normalizedImageUrl = normalizeImageUrl(imageUrl, detailHref);
+  const hasImage = !!normalizedImageUrl;
 
   // Reuse your existing interaction hook (server calls + undo toast)
   const { like, hide } = useInteract();
@@ -206,8 +208,8 @@ export default function SearchResultRow({
 
       {hasImage && (
         <div className="w-full">
-          <Image
-            src={imageUrl!}
+          <ResilientImage
+            src={normalizedImageUrl!}
             alt=""
             width={800}
             height={450}

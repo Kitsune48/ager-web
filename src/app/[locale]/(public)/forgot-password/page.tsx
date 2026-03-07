@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ApiError, getProblemDetailsFieldErrors, getRetryAfterSeconds } from "@/lib/api/errors";
 import { getPasswordRuleIssues, PasswordSchema } from "@/lib/validation/password";
 import { requestPasswordResetOtp, resetPassword } from "@/lib/api/auth";
+import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
 
 const REQUEST_SCHEMA = z.object({
   email: z.email().max(254),
@@ -275,6 +276,7 @@ export default function ForgotPasswordPage() {
               disabled={pending}
             />
             {fieldErrors.newPassword?.[0] && <p className="text-sm text-destructive">{fieldErrors.newPassword[0]}</p>}
+            <PasswordStrengthIndicator password={newPassword} locale={locale} />
             <p className="mt-1 text-xs text-muted-foreground">
               {isIt
                 ? "Requisiti: almeno 8 caratteri, 1 numero, 1 carattere speciale."

@@ -12,6 +12,7 @@ import type { UpdateMyProfileRequest } from "@/lib/api/me.types";
 import { ApiError } from "@/lib/api/me";
 import { getProblemDetailsFieldErrors, getRetryAfterSeconds } from "@/lib/api/errors";
 import { getPasswordRuleIssues } from "@/lib/validation/password";
+import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
 
 function msg(code: string | undefined, locale: "it" | "en") {
   const it: Record<string, string> = {
@@ -353,6 +354,7 @@ export default function ProfilePage() {
               value={pw.newPassword}
               onChange={(e) => setPw((p) => ({ ...p, newPassword: e.target.value }))}
             />
+            <PasswordStrengthIndicator password={pw.newPassword} locale={locale} />
             <p className="text-xs text-muted-foreground">
               {locale === "it"
                 ? "Requisiti: almeno 8 caratteri, 1 numero, 1 carattere speciale."

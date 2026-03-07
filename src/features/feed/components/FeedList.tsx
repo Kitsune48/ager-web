@@ -7,11 +7,13 @@ import FeedCard from "./FeedCard";
 import EmptyState from "./EmptyState";
 import { useSession } from "@/lib/auth/session";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const PAGE_SIZE = 20;
 
 export default function FeedList() {
   const { accessToken } = useSession();
+  const t = useTranslations("feed");
   const search = useSearchParams();
   const tab = search.get("tab") ?? "latest";
   const topic = search.get("topic") ?? "all";
@@ -114,7 +116,7 @@ export default function FeedList() {
         <div className="py-3 text-center text-sm text-muted-foreground">Loading…</div>
       )}
       {!hasNextPage && (
-        <div className="py-3 text-center text-xs text-muted-foreground">You’re all caught up 🎉</div>
+        <div className="py-3 text-center text-xs text-muted-foreground">{t("allCaughtUp")}</div>
       )}
     </div>
   );

@@ -18,6 +18,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, getProblemDetailsFieldErrors, getRetryAfterSeconds } from "@/lib/api/errors";
 import OAuthButtons from "@/components/auth/OAuthButtons";
+import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
 
 const REQUEST_SCHEMA = z.object({
   username: z.string().min(1).max(30),
@@ -333,6 +334,7 @@ export default function RegisterPage() {
                   {fieldErrors.password?.[0] && (
                     <p className="text-sm text-destructive">{fieldErrors.password[0]}</p>
                   )}
+                  <PasswordStrengthIndicator password={password} locale={locale as "en" | "it"} />
                   <p className="mt-1 text-xs text-muted-foreground">
                     {isIt
                       ? "Se la imposti: almeno 8 caratteri, 1 numero, 1 carattere speciale."

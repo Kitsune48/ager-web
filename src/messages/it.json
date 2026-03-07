@@ -5,6 +5,7 @@
   "empty": { "noResults": "Non c'è ancora nulla da vedere" },
   "feed": {
     "tabs": { "latest": "Ultimi", "top": "Top", "following": "Seguiti" },
-    "topics": { "all": "Tutti", "tech": "Tecnologia", "business": "Business", "design": "Design", "ai": "AI" }
+    "topics": { "all": "Tutti", "tech": "Tecnologia", "business": "Business", "design": "Design", "ai": "AI" },
+    "allCaughtUp": "Hai visto tutto 🎉"
   }
 }

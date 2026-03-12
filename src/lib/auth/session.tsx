@@ -76,6 +76,13 @@ function readStoredSession(): SessionState {
   return { ready: false, userId: null, accessToken: null, accessTokenExpiresAt: null };
 }
 
+function isSessionEqual(left: SessionState, right: SessionState) {
+  return left.userId === right.userId
+    && left.accessToken === right.accessToken
+    && left.accessTokenExpiresAt === right.accessTokenExpiresAt
+    && left.ready === right.ready;
+}
+
 function persistSession(next: Omit<SessionState, "ready">) {
   if (!isBrowser()) return;
 
@@ -94,7 +101,6 @@ function persistSession(next: Omit<SessionState, "ready">) {
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<SessionState>(() => readStoredSession());
   const refreshInFlightRef = useRef<Promise<string | null> | null>(null);
-  const bootStateRef = useRef(state);
 
   const updateSession = useCallback((next: SessionState) => {
     setState(next);
@@ -143,19 +149,21 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return runRefresh();
   }, [runRefresh]);
 
-  // On full page reload, SessionProvider state resets. Re-hydrate via refresh token flow.
+  // On full page reload, SessionProvider state resets. Re-hydrate only when the access token is missing/expired.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      if (bootStateRef.current.accessToken && hasUsableAccessToken(bootStateRef.current.accessTokenExpiresAt)) {
-        try {
-          await runRefresh({ clearOnUnauthorized: false });
-        } catch {
-          // Keep the stored access token until it actually expires or a protected request fails.
-        }
-        return;
-      }
+    const stored = readStoredSession();
 
+    if (stored.ready) {
+      if (!isSessionEqual(state, stored)) {
+        updateSession(stored);
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    (async () => {
       try {
         const nextToken = await runRefresh();
         if (cancelled) return;
@@ -168,7 +176,30 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [runRefresh, clearSession]);
+  }, [state, runRefresh, clearSession, updateSession]);
+
+  useEffect(() => {
+    if (!isBrowser()) return;
+
+    const onStorage = (event: StorageEvent) => {
+      if (
+        event.key !== null
+        && event.key !== SESSION_USER_ID_STORAGE_KEY
+        && event.key !== SESSION_ACCESS_TOKEN_STORAGE_KEY
+        && event.key !== SESSION_ACCESS_TOKEN_EXPIRES_AT_STORAGE_KEY
+      ) {
+        return;
+      }
+
+      const next = readStoredSession();
+      setState((current) => (isSessionEqual(current, next) ? current : next));
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   const requestLoginOtp = useCallback(async (email: string) => {
     await apiRequestLoginOtp(email);

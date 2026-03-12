@@ -32,11 +32,9 @@ function isBrowser() {
 }
 
 function readStoredRefreshToken(): { token: string | null; expiresAt: string | null } {
-  if (inMemoryRefreshToken) {
+  if (!isBrowser()) {
     return { token: inMemoryRefreshToken, expiresAt: inMemoryRefreshTokenExpiresAt };
   }
-
-  if (!isBrowser()) return { token: null, expiresAt: null };
 
   const token = window.localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
   const expiresAt = window.localStorage.getItem(REFRESH_TOKEN_EXPIRES_STORAGE_KEY);
@@ -203,10 +201,14 @@ export async function refresh(refreshToken?: string): Promise<AuthResultDto> {
       data = tokenToUse
         ? await requestJson<AuthResultDto>("/api/auth/refresh", {
             method: "POST",
+            credentials: "same-origin",
+            cache: "no-store",
             body: { refreshToken: tokenToUse },
           })
         : await requestJson<AuthResultDto>("/api/auth/refresh", {
             method: "POST",
+            credentials: "same-origin",
+            cache: "no-store",
           });
     } catch (error) {
       const apiError = error as ApiError;

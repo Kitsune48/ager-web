@@ -1,10 +1,79 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getTranslations } from "next-intl/server";
 import { getArticlePublic } from "@/lib/api/articles";
 import ArticleActions from "./ArticleActions";
 import ResilientImage from "@/components/media/ResilientImage";
 import { normalizeImageUrl } from "@/lib/images/normalize";
+
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+
+const getArticleSafe = cache(async (articleId: number) => {
+  try {
+    return await getArticlePublic(articleId);
+  } catch {
+    return null;
+  }
+});
+
+function truncateForMeta(text: string, maxLength: number) {
+  const trimmed = text.trim();
+  if (trimmed.length <= maxLength) return trimmed;
+  return `${trimmed.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: "it" | "en"; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const articleId = Number(id);
+  if (!Number.isFinite(articleId)) {
+    return { robots: { index: false, follow: false } };
+  }
+
+  const article = await getArticleSafe(articleId);
+  if (!article) {
+    return { robots: { index: false, follow: false } };
+  }
+
+  const title = truncateForMeta(article.title, 70);
+  const descriptionSource = article.excerpt?.trim() || article.title;
+  const description = truncateForMeta(descriptionSource, 160);
+  const pagePath = `/${locale}/articles/${articleId}`;
+  const pageUrl = `${siteUrl}${pagePath}`;
+  const imageUrl = normalizeImageUrl(article.imageUrl, article.canonicalUrl ?? article.url) ?? undefined;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: pagePath,
+      languages: {
+        it: `/it/articles/${articleId}`,
+        en: `/en/articles/${articleId}`,
+        "x-default": `/it/articles/${articleId}`,
+      },
+    },
+    openGraph: {
+      type: "article",
+      title,
+      description,
+      url: pageUrl,
+      siteName: "Ager",
+      locale,
+      publishedTime: article.publishedAt ?? undefined,
+      images: imageUrl ? [{ url: imageUrl, alt: article.title }] : undefined,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
 export default async function ArticleDetailPage({
   params,
@@ -16,12 +85,8 @@ export default async function ArticleDetailPage({
   const articleId = Number(id);
   if (!Number.isFinite(articleId)) notFound();
 
-  let article;
-  try {
-    article = await getArticlePublic(articleId);
-  } catch {
-    notFound();
-  }
+  const article = await getArticleSafe(articleId);
+  if (!article) notFound();
 
   const href = article.canonicalUrl ?? article.url;
   const normalizedImageUrl = normalizeImageUrl(article.imageUrl, href);

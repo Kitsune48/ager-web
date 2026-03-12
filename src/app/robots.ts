@@ -23,10 +23,26 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/it", "/en", "/it/philosophy", "/en/philosophy"],
+        allow: "/",
         disallow: [
-          "/",
           "/api/",
+          "/_next/",
+          "/it/feed",
+          "/en/feed",
+          "/it/explore",
+          "/en/explore",
+          "/it/search",
+          "/en/search",
+          "/it/lists",
+          "/en/lists",
+          "/it/profile",
+          "/en/profile",
+          "/it/login",
+          "/en/login",
+          "/it/register",
+          "/en/register",
+          "/it/forgot-password",
+          "/en/forgot-password",
         ],
       },
       ...AI_BOTS.map((bot) => ({

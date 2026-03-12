@@ -198,7 +198,7 @@ export async function refresh(refreshToken?: string): Promise<AuthResultDto> {
     return refreshSingleFlightPromise;
   }
 
-  const stored = readStoredRefreshToken().token;
+  const stored = readStoredRefreshToken();
   const storedToken = stored.token && isRefreshTokenUsable(stored.expiresAt) ? stored.token : null;
   const tokenToUse = refreshToken ?? storedToken;
 

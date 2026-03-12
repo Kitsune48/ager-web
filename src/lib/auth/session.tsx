@@ -201,6 +201,28 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+    // Proactive refresh: schedule a silent token renewal 60 seconds before the access token expires.
+    // This keeps the session alive for users who remain on the page.
+    useEffect(() => {
+      if (!isBrowser() || !state.ready || !state.accessToken || !state.accessTokenExpiresAt) return;
+
+      const expiresAtMs = new Date(state.accessTokenExpiresAt).getTime();
+      if (Number.isNaN(expiresAtMs)) return;
+
+      const delayMs = expiresAtMs - 60_000 - Date.now(); // fire 60 s before expiry
+      if (delayMs <= 0) {
+        // Already within 60 s of expiry — refresh immediately (no-op if in-flight)
+        runRefresh({ clearOnUnauthorized: false }).catch(() => {});
+        return;
+      }
+
+      const id = window.setTimeout(() => {
+        runRefresh({ clearOnUnauthorized: false }).catch(() => {});
+      }, delayMs);
+
+      return () => window.clearTimeout(id);
+    }, [state.ready, state.accessToken, state.accessTokenExpiresAt, runRefresh]);
+
   const requestLoginOtp = useCallback(async (email: string) => {
     await apiRequestLoginOtp(email);
   }, []);

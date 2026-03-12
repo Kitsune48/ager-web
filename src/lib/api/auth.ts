@@ -31,6 +31,12 @@ function isBrowser() {
   return typeof window !== "undefined";
 }
 
+  function isRefreshTokenUsable(expiresAt: string | null): boolean {
+    if (!expiresAt) return true; // unknown expiry — optimistically try
+    const exp = new Date(expiresAt).getTime();
+    return !Number.isNaN(exp) && exp > Date.now() + 5_000;
+  }
+
 function readStoredRefreshToken(): { token: string | null; expiresAt: string | null } {
   if (!isBrowser()) {
     return { token: inMemoryRefreshToken, expiresAt: inMemoryRefreshTokenExpiresAt };
@@ -193,7 +199,8 @@ export async function refresh(refreshToken?: string): Promise<AuthResultDto> {
   }
 
   const stored = readStoredRefreshToken().token;
-  const tokenToUse = refreshToken ?? stored;
+  const storedToken = stored.token && isRefreshTokenUsable(stored.expiresAt) ? stored.token : null;
+  const tokenToUse = refreshToken ?? storedToken;
 
   refreshSingleFlightPromise = (async () => {
     let data: AuthResultDto;

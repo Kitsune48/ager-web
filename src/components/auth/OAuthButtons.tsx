@@ -211,7 +211,7 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
     <div className="space-y-2">
       {showGoogle && (
         googleClientId ? (
-          <div className="relative">
+          <div className="relative overflow-hidden rounded-[4px] border border-input">
             <div
               ref={googleButtonEl}
               className={disabled || pending !== null ? "pointer-events-none opacity-60" : ""}
@@ -228,7 +228,7 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
             onClick={startGoogle}
             disabled={disabled || pending !== null}
           >
-            <GoogleGlyph />
+              <GoogleGlyph />
             {t("continueWithGoogle")}
           </Button>
         )

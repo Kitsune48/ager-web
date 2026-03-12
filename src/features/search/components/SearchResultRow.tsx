@@ -164,7 +164,8 @@ export default function SearchResultRow({
         )}
       </div>
 
-      <div className="mt-5 border-t pt-4">
+      <div style={{ height: 1, background: "hsl(var(--border))", margin: "1rem 0 0.75rem" }} />
+      <div>
         <div className="flex flex-wrap items-center gap-3">
           <Button
             size="sm"

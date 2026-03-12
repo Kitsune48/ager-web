@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useAppLocale } from "@/i18n/useAppLocale";
 import { useAuthActions } from "@/lib/auth/session";
@@ -54,6 +55,7 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
   const googleRendered = useRef(false);
   const googleButtonEl = useRef<HTMLDivElement | null>(null);
 
+  const { resolvedTheme } = useTheme();
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const appleClientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
   const appleRedirectUri = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI;
@@ -86,6 +88,12 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
         setGoogleReady(false);
       });
   }, [googleClientId]);
+
+  // Reset the rendered flag whenever the theme changes so the button is re-rendered
+  // with the correct colour scheme (outline ↔ filled_black).
+  useEffect(() => {
+    googleRendered.current = false;
+  }, [resolvedTheme]);
 
   useEffect(() => {
     // Render the official Google Sign-In button.
@@ -126,7 +134,7 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
       const buttonWidth = Math.max(200, Math.min(400, w || 400));
       g.accounts.id.renderButton(googleButtonEl.current, {
         type: "standard",
-        theme: "outline",
+        theme: resolvedTheme === "dark" ? "filled_black" : "outline",
         size: "large",
         shape: "rectangular",
         text: "continue_with",
@@ -135,7 +143,7 @@ export default function OAuthButtons({ disabled }: { disabled?: boolean }) {
       });
       googleRendered.current = true;
     }
-  }, [googleClientId, googleReady, handleOAuthError, locale, oauthGoogle, router, t]);
+  }, [googleClientId, googleReady, handleOAuthError, locale, oauthGoogle, resolvedTheme, router, t]);
 
   async function startGoogle() {
     setActionableError(null);

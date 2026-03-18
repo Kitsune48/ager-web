@@ -34,68 +34,13 @@ type AuthActions = {
 const SessionCtx = createContext<SessionState | null>(null);
 const ActionsCtx = createContext<AuthActions | null>(null);
 
-const SESSION_USER_ID_STORAGE_KEY = "ager.session.userId";
-const SESSION_ACCESS_TOKEN_STORAGE_KEY = "ager.session.accessToken";
-const SESSION_ACCESS_TOKEN_EXPIRES_AT_STORAGE_KEY = "ager.session.accessTokenExpiresAt";
-
 function isBrowser() {
   return typeof window !== "undefined";
 }
 
-function hasUsableAccessToken(expiresAt: string | null) {
-  if (!expiresAt) return false;
-  const expiryTime = new Date(expiresAt).getTime();
-  if (Number.isNaN(expiryTime)) return false;
-  return expiryTime > Date.now() + 15_000;
-}
-
 function readStoredSession(): SessionState {
-  if (!isBrowser()) {
-    return { ready: false, userId: null, accessToken: null, accessTokenExpiresAt: null };
-  }
-
-  const userId = window.localStorage.getItem(SESSION_USER_ID_STORAGE_KEY);
-  const accessToken = window.localStorage.getItem(SESSION_ACCESS_TOKEN_STORAGE_KEY);
-  const accessTokenExpiresAt = window.localStorage.getItem(SESSION_ACCESS_TOKEN_EXPIRES_AT_STORAGE_KEY);
-
-  if (accessToken && hasUsableAccessToken(accessTokenExpiresAt)) {
-    return {
-      ready: true,
-      userId,
-      accessToken,
-      accessTokenExpiresAt,
-    };
-  }
-
-  if (isBrowser()) {
-    window.localStorage.removeItem(SESSION_USER_ID_STORAGE_KEY);
-    window.localStorage.removeItem(SESSION_ACCESS_TOKEN_STORAGE_KEY);
-    window.localStorage.removeItem(SESSION_ACCESS_TOKEN_EXPIRES_AT_STORAGE_KEY);
-  }
-
+  // Keep access tokens in memory only. On reload, re-hydrate via refresh-cookie flow.
   return { ready: false, userId: null, accessToken: null, accessTokenExpiresAt: null };
-}
-
-function isSessionEqual(left: SessionState, right: SessionState) {
-  return left.userId === right.userId
-    && left.accessToken === right.accessToken
-    && left.accessTokenExpiresAt === right.accessTokenExpiresAt
-    && left.ready === right.ready;
-}
-
-function persistSession(next: Omit<SessionState, "ready">) {
-  if (!isBrowser()) return;
-
-  if (next.userId && next.accessToken && next.accessTokenExpiresAt) {
-    window.localStorage.setItem(SESSION_USER_ID_STORAGE_KEY, next.userId);
-    window.localStorage.setItem(SESSION_ACCESS_TOKEN_STORAGE_KEY, next.accessToken);
-    window.localStorage.setItem(SESSION_ACCESS_TOKEN_EXPIRES_AT_STORAGE_KEY, next.accessTokenExpiresAt);
-    return;
-  }
-
-  window.localStorage.removeItem(SESSION_USER_ID_STORAGE_KEY);
-  window.localStorage.removeItem(SESSION_ACCESS_TOKEN_STORAGE_KEY);
-  window.localStorage.removeItem(SESSION_ACCESS_TOKEN_EXPIRES_AT_STORAGE_KEY);
 }
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
@@ -104,11 +49,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const updateSession = useCallback((next: SessionState) => {
     setState(next);
-    persistSession({
-      userId: next.userId,
-      accessToken: next.accessToken,
-      accessTokenExpiresAt: next.accessTokenExpiresAt,
-    });
   }, []);
 
   const clearSession = useCallback(() => {
@@ -152,16 +92,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // On full page reload, SessionProvider state resets. Re-hydrate only when the access token is missing/expired.
   useEffect(() => {
     let cancelled = false;
-    const stored = readStoredSession();
-
-    if (stored.ready) {
-      if (!isSessionEqual(state, stored)) {
-        updateSession(stored);
-      }
-      return () => {
-        cancelled = true;
-      };
-    }
 
     (async () => {
       try {
@@ -176,30 +106,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [state, runRefresh, clearSession, updateSession]);
-
-  useEffect(() => {
-    if (!isBrowser()) return;
-
-    const onStorage = (event: StorageEvent) => {
-      if (
-        event.key !== null
-        && event.key !== SESSION_USER_ID_STORAGE_KEY
-        && event.key !== SESSION_ACCESS_TOKEN_STORAGE_KEY
-        && event.key !== SESSION_ACCESS_TOKEN_EXPIRES_AT_STORAGE_KEY
-      ) {
-        return;
-      }
-
-      const next = readStoredSession();
-      setState((current) => (isSessionEqual(current, next) ? current : next));
-    };
-
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
+  }, [runRefresh, clearSession]);
 
     // Proactive refresh: schedule a silent token renewal 60 seconds before the access token expires.
     // This keeps the session alive for users who remain on the page.

@@ -41,3 +41,19 @@ Open http://localhost:3000
 
 Build command: `npm run build`
 Output: Next.js default
+
+## Observability notes
+
+Server-side route handlers under `src/app/api/**` emit structured JSON logs for proxy boundaries.
+
+- Correlation headers are propagated upstream when available:
+	- `x-request-id`
+	- `x-correlation-id`
+	- `traceparent`
+- Route handlers emit completion events with:
+	- `event_name`
+	- `status_code`
+	- `duration_ms`
+	- request/correlation identifiers
+
+Sensitive fields are intentionally not logged (authorization, cookies, token payloads).

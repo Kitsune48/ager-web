@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  appendObservabilityHeaders,
+  createProxyRequestContext,
+  logProxyEvent,
+} from "@/app/api/auth/_shared";
 
 const API_BASE = (process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(
   /\/+$/,
@@ -6,6 +11,8 @@ const API_BASE = (process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_U
 );
 
 export async function GET(request: Request) {
+  const startedAt = Date.now();
+  const requestContext = createProxyRequestContext(request);
   const url = new URL(request.url);
 
   const backendUrl = `${API_BASE}/api/feed${url.search}`;
@@ -13,12 +20,25 @@ export async function GET(request: Request) {
 
   const res = await fetch(backendUrl, {
     method: "GET",
-    headers: {
+    headers: appendObservabilityHeaders({
       ...(authorization ? { Authorization: authorization } : {}),
       Accept: "application/json",
-    },
+    }, requestContext),
     cache: "no-store",
   });
+
+  logProxyEvent(
+    res.ok ? "Information" : "Warning",
+    "proxy_request_completed",
+    "Feed proxy request completed.",
+    {
+      request_id: requestContext.requestId,
+      correlation_id: requestContext.correlationId,
+      upstream_path: "/api/feed",
+      status_code: res.status,
+      duration_ms: Date.now() - startedAt,
+    }
+  );
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");

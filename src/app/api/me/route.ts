@@ -1,4 +1,9 @@
-import { toProxyResponse } from "@/app/api/auth/_shared";
+import {
+  appendObservabilityHeaders,
+  createProxyRequestContext,
+  logProxyEvent,
+  toProxyResponse,
+} from "@/app/api/auth/_shared";
 
 function getApiBase() {
   return (
@@ -9,6 +14,8 @@ function getApiBase() {
 }
 
 async function proxyMe(req: Request, extraPath: string) {
+  const startedAt = Date.now();
+  const requestContext = createProxyRequestContext(req);
   const apiBase = getApiBase();
   const url = new URL(req.url);
   const backendUrl = `${apiBase}/api/me${extraPath}${url.search}`;
@@ -36,10 +43,24 @@ async function proxyMe(req: Request, extraPath: string) {
 
   const res = await fetch(backendUrl, {
     method,
-    headers,
+    headers: appendObservabilityHeaders(headers, requestContext),
     body,
     cache: "no-store",
   });
+
+  logProxyEvent(
+    res.ok ? "Information" : "Warning",
+    "proxy_request_completed",
+    "Me proxy request completed.",
+    {
+      request_id: requestContext.requestId,
+      correlation_id: requestContext.correlationId,
+      upstream_path: `/api/me${extraPath}`,
+      method,
+      status_code: res.status,
+      duration_ms: Date.now() - startedAt,
+    }
+  );
 
   return toProxyResponse(res);
 }

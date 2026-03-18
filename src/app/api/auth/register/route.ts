@@ -1,19 +1,40 @@
 import { NextResponse } from "next/server";
 import { setRefreshCookie } from "@/lib/auth/cookie";
 import type { AuthResultDto, RegisterRequest } from "@/lib/auth/types";
-import { getApiBase, toProxyResponse } from "@/app/api/auth/_shared";
+import {
+  appendObservabilityHeaders,
+  createProxyRequestContext,
+  getApiBase,
+  logProxyEvent,
+  toProxyResponse,
+} from "@/app/api/auth/_shared";
 
 const API_BASE = getApiBase();
 const BACKEND_AUTH = `${API_BASE}/api/auth`;
 
 export async function POST(req: Request) {
+  const startedAt = Date.now();
+  const requestContext = createProxyRequestContext(req);
   const body = (await req.json()) as RegisterRequest;
 
   const res = await fetch(`${BACKEND_AUTH}/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: appendObservabilityHeaders({ "Content-Type": "application/json" }, requestContext),
     body: JSON.stringify(body),
   });
+
+  logProxyEvent(
+    res.ok ? "Information" : "Warning",
+    "proxy_request_completed",
+    "Auth register proxy request completed.",
+    {
+      request_id: requestContext.requestId,
+      correlation_id: requestContext.correlationId,
+      upstream_path: "/api/auth/register",
+      status_code: res.status,
+      duration_ms: Date.now() - startedAt,
+    }
+  );
 
   if (!res.ok) {
     return toProxyResponse(res);

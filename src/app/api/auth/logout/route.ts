@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
 import { readRefreshCookie, clearRefreshCookie } from "@/lib/auth/cookie";
 import type { LogoutRequest } from "@/lib/auth/types";
-import { getApiBase, pickRequestHeaders, toProxyResponse } from "@/app/api/auth/_shared";
+import {
+  appendObservabilityHeaders,
+  createProxyRequestContext,
+  getApiBase,
+  logProxyEvent,
+  pickRequestHeaders,
+  toProxyResponse,
+} from "@/app/api/auth/_shared";
 
 const API_BASE = getApiBase();
 const BACKEND_AUTH = `${API_BASE}/api/auth`;
 
 export async function POST(req: Request) {
+  const startedAt = Date.now();
+  const requestContext = createProxyRequestContext(req);
   const refreshCookie = await readRefreshCookie();
 
   let refreshToken: string | null = refreshCookie;
@@ -23,16 +32,35 @@ export async function POST(req: Request) {
     try {
       const upstream = await fetch(`${BACKEND_AUTH}/logout`, {
         method: "POST",
-        headers: {
+        headers: appendObservabilityHeaders({
           "Content-Type": "application/json",
           ...pickRequestHeaders(req, ["authorization", "x-csrf-token", "cookie"]),
-        },
+        }, requestContext),
         body: JSON.stringify({ refreshToken: refreshToken } satisfies LogoutRequest),
       });
+
+      logProxyEvent(
+        upstream.ok ? "Information" : "Warning",
+        "proxy_request_completed",
+        "Auth logout proxy request completed.",
+        {
+          request_id: requestContext.requestId,
+          correlation_id: requestContext.correlationId,
+          upstream_path: "/api/auth/logout",
+          status_code: upstream.status,
+          duration_ms: Date.now() - startedAt,
+        }
+      );
 
       await clearRefreshCookie();
       return toProxyResponse(upstream);
     } catch {
+      logProxyEvent("Error", "proxy_request_failed", "Auth logout proxy request failed.", {
+        request_id: requestContext.requestId,
+        correlation_id: requestContext.correlationId,
+        upstream_path: "/api/auth/logout",
+        duration_ms: Date.now() - startedAt,
+      });
       // ignore network errors on logout
     }
   }

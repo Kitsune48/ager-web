@@ -24,17 +24,20 @@ describe("auth api", () => {
   });
 
   it("uses the latest refresh token from localStorage across tabs", async () => {
+    const refreshExpiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const rotatedRefreshExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+
     requestJsonMock.mockResolvedValue({
       userId: "user-1",
       accessToken: "access-2",
-      accessTokenExpiresAt: "2026-03-12T12:30:00.000Z",
+      accessTokenExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
       refreshToken: "refresh-2",
-      refreshTokenExpiresAt: "2026-03-26T12:00:00.000Z",
+      refreshTokenExpiresAt: rotatedRefreshExpiresAt,
     });
 
-    storeRefreshToken("refresh-1", "2026-03-26T11:00:00.000Z");
+    storeRefreshToken("refresh-1", refreshExpiresAt);
     window.localStorage.setItem("ager.refreshToken", "refresh-from-other-tab");
-    window.localStorage.setItem("ager.refreshTokenExpiresAt", "2026-03-26T12:00:00.000Z");
+    window.localStorage.setItem("ager.refreshTokenExpiresAt", refreshExpiresAt);
 
     await refresh();
 
@@ -53,7 +56,7 @@ describe("auth api", () => {
     requestJsonMock.mockResolvedValue({
       userId: "user-1",
       accessToken: "access-2",
-      accessTokenExpiresAt: "2026-03-12T12:30:00.000Z",
+      accessTokenExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     });
 
     await refresh();

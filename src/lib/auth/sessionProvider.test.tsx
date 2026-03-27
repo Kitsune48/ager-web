@@ -86,8 +86,6 @@ describe("SessionProvider auth recovery", () => {
       expect(screen.getByTestId("accessToken")).toHaveTextContent("access-initial");
     });
 
-    const callsBeforeVisibilityChange = refreshMock.mock.calls.length;
-
     await act(async () => {
       Object.defineProperty(document, "visibilityState", {
         configurable: true,
@@ -97,7 +95,7 @@ describe("SessionProvider auth recovery", () => {
     });
 
     await waitFor(() => {
-      expect(refreshMock.mock.calls.length).toBeGreaterThanOrEqual(callsBeforeVisibilityChange + 1);
+      expect(refreshMock).toHaveBeenCalledTimes(2);
       expect(screen.getByTestId("accessToken")).toHaveTextContent("access-refreshed");
     });
   });

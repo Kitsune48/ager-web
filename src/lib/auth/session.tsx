@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { ApiError } from "@/lib/api/errors";
-import { configureAuthRetryHandlers } from "@/lib/api/request";
 import {
   login as apiLogin,
   refresh as apiRefresh,
@@ -44,13 +43,6 @@ function isBrowser() {
   return typeof window !== "undefined";
 }
 
-function hasUsableAccessToken(expiresAt: string | null) {
-  if (!expiresAt) return false;
-  const expiryTime = new Date(expiresAt).getTime();
-  if (Number.isNaN(expiryTime)) return false;
-  return expiryTime > Date.now() + 15_000;
-}
-
 function readStoredSession(): SessionState {
   // Keep access tokens in memory only. On reload, re-hydrate via refresh-cookie flow.
   return { ready: false, userId: null, accessToken: null, accessTokenExpiresAt: null };
@@ -59,11 +51,6 @@ function readStoredSession(): SessionState {
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<SessionState>(() => readStoredSession());
   const refreshInFlightRef = useRef<Promise<string | null> | null>(null);
-  const stateRef = useRef<SessionState>(state);
-
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
 
   const updateSession = useCallback((next: SessionState) => {
     setState(next);
@@ -107,17 +94,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return runRefresh();
   }, [runRefresh]);
 
-  useEffect(() => {
-    configureAuthRetryHandlers({
-      getAccessToken: () => stateRef.current.accessToken,
-      refreshAccessToken: () => runRefresh(),
-    });
-
-    return () => {
-      configureAuthRetryHandlers(null);
-    };
-  }, [runRefresh]);
-
   // On full page reload, SessionProvider state resets. Re-hydrate only when the access token is missing/expired.
   useEffect(() => {
     let cancelled = false;
@@ -158,36 +134,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       return () => window.clearTimeout(id);
     }, [state.ready, state.accessToken, state.accessTokenExpiresAt, runRefresh]);
-
-  useEffect(() => {
-    if (!isBrowser()) return;
-
-    const tryRefreshOnResume = () => {
-      const current = stateRef.current;
-      if (!current.ready) return;
-      if (!current.accessToken || !hasUsableAccessToken(current.accessTokenExpiresAt)) {
-        void runRefresh().catch(() => {});
-      }
-    };
-
-    const onFocus = () => {
-      tryRefreshOnResume();
-    };
-
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        tryRefreshOnResume();
-      }
-    };
-
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibilityChange);
-
-    return () => {
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-  }, [runRefresh]);
 
   const requestLoginOtp = useCallback(async (email: string) => {
     await apiRequestLoginOtp(email);

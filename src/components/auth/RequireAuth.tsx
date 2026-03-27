@@ -12,13 +12,9 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (!ready) {
-      setChecked(false);
-      return;
-    }
+    if (!ready) return;
 
     if (!accessToken) {
-      setChecked(false);
       router.replace(`/${locale}/login`);
       return;
     }

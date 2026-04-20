@@ -10,6 +10,23 @@ type ApiRequestOptions = {
   cache?: RequestCache;
 };
 
+const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+const CSRF_COOKIE = "XSRF-TOKEN";
+const CSRF_HEADER = "X-CSRF-TOKEN";
+
+function readCsrfFromCookie(): string | null {
+  if (typeof document === "undefined") return null;
+  const raw = document.cookie;
+  if (!raw) return null;
+  for (const part of raw.split(";")) {
+    const [name, ...rest] = part.split("=");
+    if (name?.trim() === CSRF_COOKIE) {
+      return decodeURIComponent(rest.join("=").trim());
+    }
+  }
+  return null;
+}
+
 function buildHeaders(options: ApiRequestOptions, expectsJson: boolean): Headers {
   const headers = new Headers(options.headers ?? {});
 
@@ -23,6 +40,17 @@ function buildHeaders(options: ApiRequestOptions, expectsJson: boolean): Headers
 
   if (options.accessToken) {
     headers.set("Authorization", `Bearer ${options.accessToken}`);
+  }
+
+  // Double-submit CSRF: on every state-changing request, if the XSRF-TOKEN cookie exists
+  // (set by GET /api/auth/csrf) mirror it into the X-CSRF-TOKEN header. Both the Next.js
+  // edge (enforceCsrfIfCookiePresent) and the backend (RequireCsrfIfConfigured) require
+  // the match. If the cookie is absent (non-browser client), we skip — the backend treats
+  // this as a non-cookie flow and the edge lets it through.
+  const method = (options.method ?? "GET").toUpperCase();
+  if (STATE_CHANGING_METHODS.has(method) && !headers.has(CSRF_HEADER)) {
+    const csrf = readCsrfFromCookie();
+    if (csrf) headers.set(CSRF_HEADER, csrf);
   }
 
   return headers;

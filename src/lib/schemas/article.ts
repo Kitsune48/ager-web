@@ -5,7 +5,6 @@ export const ArticleSchema = z.object({
   sourceId: z.string(),
   title: z.string(),
   excerpt: z.string().nullable().optional(),
-  content: z.string().optional(), // detail page may include this
   author: z.string().nullable().optional(),
   imageUrl: z.string().url().nullable().optional(),
   topics: z.array(z.string()).nullable().optional(),

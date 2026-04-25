@@ -519,6 +519,46 @@
       "saveFailed": "Salvataggio non riuscito"
     }
   },
+  "admin": {
+    "sources": {
+      "create": {
+        "trigger": "Aggiungi fonte",
+        "title": "Aggiungi una nuova fonte",
+        "description": "Inserisci i dati della fonte. La verifica del feed RSS è consigliata prima del salvataggio.",
+        "fields": {
+          "type": "Tipo",
+          "name": "Nome",
+          "url": "URL homepage",
+          "rssUrl": "URL feed RSS",
+          "country": "Paese (ISO 3166-1 alpha-2)",
+          "lang": "Lingua"
+        },
+        "probe": {
+          "action": "Verifica feed",
+          "running": "Verifica in corso…",
+          "ok": "Feed valido (root: {root}).",
+          "failed": "Feed non valido: {reason}.",
+          "saveAnyway": "Salva comunque (so quello che faccio)"
+        },
+        "actions": {
+          "cancel": "Annulla",
+          "create": "Crea fonte",
+          "creating": "Creazione…"
+        },
+        "errors": {
+          "invalidField": "Valore non valido.",
+          "rssUrlRequiredForProbe": "Inserisci un URL prima di verificare.",
+          "rssUrlMustBeHttp": "L'URL deve iniziare con http:// o https://.",
+          "duplicateUrl": "Una fonte con questo URL esiste già.",
+          "invalidUrl": "URL non valido."
+        },
+        "toasts": {
+          "created": "Fonte creata.",
+          "createFailed": "Creazione non riuscita."
+        }
+      }
+    }
+  },
   "botPolicy": {
     "meta": {
       "title": "AgerBot — come funziona il nostro crawler",

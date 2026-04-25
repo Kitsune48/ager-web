@@ -1,20 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { listSourcesAdmin } from "@/lib/api/sources";
 import { useSession } from "@/lib/auth/session";
 import LicensingStatusBadge from "@/features/admin/components/LicensingStatusBadge";
+import CreateSourceDialog from "@/features/admin/components/CreateSourceDialog";
+import { Button } from "@/components/ui/button";
 import { useAppLocale } from "@/i18n/useAppLocale";
 
 export default function AdminSourcesPage() {
   const { accessToken } = useSession();
   const { locale } = useAppLocale();
   const sp = useSearchParams();
+  const qc = useQueryClient();
+  const tCreate = useTranslations("admin.sources.create");
   const expiringIn = sp.get("expiringIn");
   const tdmOptout = sp.get("tdmOptout") === "true";
   const negotiation = sp.get("negotiation") === "in_progress" ? "in_progress" as const : undefined;
+
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["adminSources", { expiringIn, tdmOptout, negotiation }],
@@ -52,12 +60,28 @@ export default function AdminSourcesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 text-xs">
-        <FilterLink label="All" href={`/${locale}/admin/sources`} active={!expiringIn && !tdmOptout && !negotiation} />
-        <FilterLink label="Licenses expiring (30d)" href={`/${locale}/admin/sources?expiringIn=30`} active={!!expiringIn} />
-        <FilterLink label="TDM opt-out" href={`/${locale}/admin/sources?tdmOptout=true`} active={tdmOptout} />
-        <FilterLink label="Negotiation in progress" href={`/${locale}/admin/sources?negotiation=in_progress`} active={!!negotiation} />
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2 text-xs">
+          <FilterLink label="All" href={`/${locale}/admin/sources`} active={!expiringIn && !tdmOptout && !negotiation} />
+          <FilterLink label="Licenses expiring (30d)" href={`/${locale}/admin/sources?expiringIn=30`} active={!!expiringIn} />
+          <FilterLink label="TDM opt-out" href={`/${locale}/admin/sources?tdmOptout=true`} active={tdmOptout} />
+          <FilterLink label="Negotiation in progress" href={`/${locale}/admin/sources?negotiation=in_progress`} active={!!negotiation} />
+        </div>
+        <Button size="sm" onClick={() => setCreateOpen(true)}>
+          {tCreate("trigger")}
+        </Button>
       </div>
+
+      <CreateSourceDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        accessToken={accessToken}
+        onCreated={() => {
+          // Refresh every variant of the list query (different filters share the prefix
+          // ["adminSources", …]); invalidating the prefix re-fetches them all on demand.
+          qc.invalidateQueries({ queryKey: ["adminSources"] });
+        }}
+      />
 
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full text-sm">

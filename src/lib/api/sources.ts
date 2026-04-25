@@ -71,3 +71,53 @@ export async function refreshTosSnapshot(
     },
   );
 }
+
+// ----- "Add source" admin flow ---------------------------------------------------------
+
+// Mirrors Ager.Application.DTOs.Sources.SourceAdminCreate. `type` is the same string the
+// backend expects via SourceTypeMap (RSS|MANUAL|API|AGENCY); not localised.
+export type CreateSourceInput = {
+  type: "RSS" | "MANUAL" | "API" | "AGENCY";
+  name: string;
+  url: string;
+  rssUrl?: string | null;
+  country?: string | null;
+  lang?: string | null;
+};
+
+// Mirrors Ager.Application.DTOs.Sources.RssProbeResponse. `valid` is true only when
+// the URL responded 200 with an XML payload whose root looks like an RSS/Atom feed.
+// `reason` is a machine-readable hint (`http_404`, `not_xml`, `not_a_feed`, `timeout`,
+// `url_not_allowed:…`, `http_error:…`, etc.) that the form maps to a localised message.
+export type RssProbeResult = {
+  valid: boolean;
+  statusCode?: number | null;
+  contentType?: string | null;
+  rootElement?: string | null;
+  finalUrl?: string | null;
+  reason?: string | null;
+};
+
+export async function createSourceAdmin(
+  body: CreateSourceInput,
+  accessToken?: string,
+): Promise<{ id: number }> {
+  return requestJson<{ id: number }>(makeUrl("/api/admin/sources"), {
+    method: "POST",
+    accessToken,
+    credentials: "include",
+    body,
+  });
+}
+
+export async function probeRssFeed(
+  rssUrl: string,
+  accessToken?: string,
+): Promise<RssProbeResult> {
+  return requestJson<RssProbeResult>(makeUrl("/api/admin/sources/probe-rss"), {
+    method: "POST",
+    accessToken,
+    credentials: "include",
+    body: { rssUrl },
+  });
+}

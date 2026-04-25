@@ -1,39 +1,19 @@
 import { NextResponse } from "next/server";
 
+// Proxy for backend POST /api/admin/sources/probe-rss. The backend performs a one-shot
+// outbound HTTP fetch (with the SSRF guard) to validate that the URL points at an actual
+// RSS/Atom feed. The result is surfaced as-is so the admin UI can render diagnostics.
+//
+// We forward Authorization, Cookie, and X-CSRF-TOKEN exactly like the create proxy: the
+// backend gates this endpoint with role admin + RequireCsrfIfConfigured, and the
+// antiforgery cookie+token pair must travel together.
 const API_BASE = (process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(
   /\/+$/,
   "",
 );
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const backendUrl = `${API_BASE}/api/admin/sources${url.search}`;
-  const authorization = request.headers.get("authorization") ?? undefined;
-  const cookie = request.headers.get("cookie") ?? undefined;
-
-  const res = await fetch(backendUrl, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      ...(authorization ? { Authorization: authorization } : {}),
-      ...(cookie ? { Cookie: cookie } : {}),
-    },
-    cache: "no-store",
-  });
-
-  const body = await res.text();
-  return new NextResponse(body || null, {
-    status: res.status,
-    headers: { "Content-Type": res.headers.get("Content-Type") ?? "application/json" },
-  });
-}
-
-// Create a new source. Mirrors the GET shape but adds the request body and the
-// CSRF header — the backend's RequireCsrfIfConfigured filter expects X-CSRF-TOKEN
-// for any state-changing admin call. application/problem+json from a 4xx upstream
-// is forwarded as-is so the UI can read the typed `errorCode`/`title`.
 export async function POST(request: Request) {
-  const backendUrl = `${API_BASE}/api/admin/sources`;
+  const backendUrl = `${API_BASE}/api/admin/sources/probe-rss`;
   const authorization = request.headers.get("authorization") ?? undefined;
   const cookie = request.headers.get("cookie") ?? undefined;
   const csrf = request.headers.get("x-csrf-token") ?? undefined;

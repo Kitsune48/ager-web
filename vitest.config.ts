@@ -13,6 +13,7 @@ export default defineConfig({
       "src/components/**/*.test.{ts,tsx}",
       "src/lib/**/*.test.{ts,tsx}",
       "src/app/**/*.test.{ts,tsx}",
+      "src/features/admin/**/*.test.{ts,tsx}",
     ],
     environment: "jsdom",
     setupFiles: ["./src/test/setup-tests.ts"],

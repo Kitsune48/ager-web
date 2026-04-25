@@ -519,6 +519,46 @@
       "saveFailed": "Save failed"
     }
   },
+  "admin": {
+    "sources": {
+      "create": {
+        "trigger": "Add source",
+        "title": "Add a new source",
+        "description": "Fill in the source details. Verifying the RSS feed before saving is recommended.",
+        "fields": {
+          "type": "Type",
+          "name": "Name",
+          "url": "Homepage URL",
+          "rssUrl": "RSS feed URL",
+          "country": "Country (ISO 3166-1 alpha-2)",
+          "lang": "Language"
+        },
+        "probe": {
+          "action": "Verify feed",
+          "running": "Verifying…",
+          "ok": "Feed valid (root: {root}).",
+          "failed": "Feed invalid: {reason}.",
+          "saveAnyway": "Save anyway (I know what I'm doing)"
+        },
+        "actions": {
+          "cancel": "Cancel",
+          "create": "Create source",
+          "creating": "Creating…"
+        },
+        "errors": {
+          "invalidField": "Invalid value.",
+          "rssUrlRequiredForProbe": "Enter a URL before verifying.",
+          "rssUrlMustBeHttp": "URL must start with http:// or https://.",
+          "duplicateUrl": "A source with this URL already exists.",
+          "invalidUrl": "Invalid URL."
+        },
+        "toasts": {
+          "created": "Source created.",
+          "createFailed": "Create failed."
+        }
+      }
+    }
+  },
   "botPolicy": {
     "meta": {
       "title": "AgerBot — how our crawler works",

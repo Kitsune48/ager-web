@@ -76,6 +76,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const inFlight = (async () => {
       try {
         const data = await apiRefresh();
+        // The pre-refresh state-changing call (POST /api/auth/refresh) caused csrf.ts
+        // to bootstrap a token-pair while we had no access token in memory — the
+        // backend minted it anonymously. Now that we DO have a bearer, that cached
+        // pair will fail validation on the next authenticated mutation. Drop it so
+        // the next state-changing call re-bootstraps with the bearer attached.
+        clearCsrfTokenCache();
         updateSession({
           ready: true,
           userId: data.userId,

@@ -11,18 +11,22 @@ const serverActionOrigins = (process.env.NEXT_SERVER_ACTIONS_ALLOWED_ORIGINS ?? 
 
 // Strict Content-Security-Policy. Tighten further (nonces, hashes) as inline script usage is
 // audited. We deliberately avoid 'unsafe-inline' for scripts wherever possible.
+//
+// hCaptcha origins per https://docs.hcaptcha.com/#content-security-policy-settings —
+// it loads scripts from js.hcaptcha.com, fetches challenges from *.hcaptcha.com,
+// and renders the widget inside an iframe served from newassets.hcaptcha.com.
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "object-src 'none'",
-  "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com",
-  "style-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://hcaptcha.com https://*.hcaptcha.com",
+  "style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://accounts.google.com",
-  "frame-src https://accounts.google.com",
+  "connect-src 'self' https://accounts.google.com https://hcaptcha.com https://*.hcaptcha.com",
+  "frame-src https://accounts.google.com https://hcaptcha.com https://*.hcaptcha.com",
   "manifest-src 'self'",
   "worker-src 'self' blob:",
   "upgrade-insecure-requests"
